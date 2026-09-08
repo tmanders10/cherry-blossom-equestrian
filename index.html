@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cherry Blossom Equestrian</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-main: #111111;
+      --text-muted: #555555;
+      --font-serif: "Georgia", "Times New Roman", serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 680px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo {
+      max-width: 280px;
+      width: 100%;
+      height: auto;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    p.description {
+      font-size: clamp(1rem, 2.5vw, 1.125rem);
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 580px;
+      margin-bottom: 3rem;
+    }
+
+    footer {
+      font-size: 0.875rem;
+      color: #888888;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+    <!-- Make sure your black and white logo image is named "logo.png" in the same folder -->
+    <img src="logo.png" alt="Cherry Blossom Equestrian Logo" class="logo">
+
+    <h1>Our Story is Beginning.</h1>
+
+    <p class="description">
+      A premier Equestrian Center in the North Metro Atlanta area, specializing in competitive hunter/jumper lesson programs and dedicated support for riders on local and rated circuits. The full digital home for Cherry Blossom Equestrian is currently in training.
+    </p>
+  </main>
+
+  <footer>
+    &copy; Cherry Blossom Equestrian
+  </footer>
+
+</body>
+</html>
