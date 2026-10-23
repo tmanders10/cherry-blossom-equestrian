@@ -35,8 +35,6 @@
       font-family: var(--font-sans);
       line-height: 1.6;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
 
     .app-layout {
@@ -271,3 +269,36 @@
         position: fixed;
         top: 0;
         bottom: 0;
+        left: 0;
+        padding: 2rem 1.25rem;
+        z-index: 10;
+        overflow-y: auto;
+      }
+
+      .sidebar-heading {
+        font-family: var(--font-serif);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #888888;
+        margin-bottom: 1.25rem;
+        padding-left: 0.5rem;
+      }
+
+      .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+
+      .nav-btn {
+        background: none;
+        border: none;
+        color: #cccccc;
+        text-align: left;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.88rem;
+        font-family: var(--font-sans);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0
