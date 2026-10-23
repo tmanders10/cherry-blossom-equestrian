@@ -1,9 +1,18 @@
+The issue in your screenshot is caused by flex items wrapping inline inside `.mobile-nav-links`. Setting `width: 100%` on `.mobile-nav-btn` forces each navigation item to take up its own full line.
+
+Here is the updated, complete code for **`index.html`**:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cherry Blossom Equestrian</title>
+  <title>Meet Our Head Trainer | Cherry Blossom Equestrian</title>
+  
+  <!-- Favicon Link -->
+  <link rel="icon" type="image/png" href="dark logo square.png">
+
   <style>
     :root {
       --bg-color: #ffffff;
@@ -39,6 +48,7 @@
       min-height: 100vh;
     }
 
+    /* --- MOBILE HEADER & HAMBURGER MENU --- */
     .mobile-header {
       display: flex;
       justify-content: space-between;
@@ -75,6 +85,7 @@
       z-index: 200;
       flex-direction: column;
       padding: 1.5rem;
+      overflow-y: auto;
     }
 
     .mobile-nav-overlay.open {
@@ -98,7 +109,16 @@
       cursor: pointer;
     }
 
-    .mobile-nav-btn, .nav-btn {
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .mobile-nav-btn {
+      display: block;
+      width: 100%;
       background: none;
       border: none;
       color: #cccccc;
@@ -108,9 +128,10 @@
       font-family: var(--font-sans);
       cursor: pointer;
       border-radius: 4px;
+      transition: all 0.2s ease;
     }
 
-    .mobile-nav-btn.active, .nav-btn.active {
+    .mobile-nav-btn.active {
       color: #ffffff;
       background-color: var(--sidebar-hover);
       border-left: 3px solid var(--accent-gold);
@@ -201,6 +222,16 @@
       margin-bottom: 0.85rem;
     }
 
+    .quote-box {
+      border-left: 3px solid var(--text-main);
+      padding-left: 1rem;
+      margin: 1.25rem 0;
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--text-main);
+    }
+
     footer {
       text-align: center;
       font-size: 0.75rem;
@@ -245,6 +276,25 @@
         display: flex;
         flex-direction: column;
         gap: 0.4rem;
+      }
+
+      .nav-btn {
+        background: none;
+        border: none;
+        color: #cccccc;
+        text-align: left;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.88rem;
+        font-family: var(--font-sans);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+      }
+
+      .nav-btn.active {
+        color: #ffffff;
+        background-color: var(--sidebar-hover);
+        border-left: 3px solid var(--accent-gold);
       }
 
       .main-wrapper {
@@ -366,7 +416,10 @@
           <div id="tab-next" class="tab-panel">
             <h4>The Next Chapter</h4>
             <p>After nearly two decades at Falcon Ridge Stables, Charity is excited to bring the experience, relationships, and lessons accumulated throughout her career into the next chapter with Cherry Blossom Equestrian.</p>
-            <p><strong>Put the horse first. Teach the rider the “why.” Celebrate progress. Learn from mistakes. Never stop developing better horsemen.</strong></p>
+            <div class="quote-box">
+              At the heart of her program is a simple philosophy:<br><br>
+              Put the horse first. Teach the rider the “why.” Celebrate progress. Learn from mistakes. Never stop developing better horsemen.
+            </div>
             <p>Whether a student’s goal is gaining confidence, developing a young or challenging horse, becoming a stronger and more educated rider, or competing successfully at the highest levels of the sport, Charity believes the foundation remains the same: thoughtful horsemanship, positive coaching, open communication, and respect for the horse.</p>
           </div>
 
@@ -438,3 +491,5 @@
   </script>
 </body>
 </html>
+
+```
