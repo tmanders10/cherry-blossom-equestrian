@@ -21,6 +21,15 @@ export default function AdminPage() {
   const [newCommunityPasscode, setNewCommunityPasscode] = useState('');
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysList = [
+    { label: 'M', fullDay: 'Monday' },
+    { label: 'Tu', fullDay: 'Tuesday' },
+    { label: 'W', fullDay: 'Wednesday' },
+    { label: 'Th', fullDay: 'Thursday' },
+    { label: 'Fr', fullDay: 'Friday' },
+    { label: 'Sa', fullDay: 'Saturday' },
+    { label: 'Su', fullDay: 'Sunday' },
+  ];
 
   useEffect(() => {
     const savedAdmin = localStorage.getItem('cbe_admin_code');
@@ -42,7 +51,7 @@ export default function AdminPage() {
 
   // --- MASTER PLAN FUNCTIONS ---
   async function fetchMasterPlan() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('master_lessons')
       .select('*, master_regulars(*)')
       .order('day_of_week', { ascending: true })
@@ -133,6 +142,25 @@ export default function AdminPage() {
     }
   }
 
+  // Format 24hr time to 12hr format with lowercase 'a' or 'p'
+  function formatTime12Hr(timeString) {
+    if (!timeString) return '';
+    const [hoursStr, minutesStr] = timeString.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const suffix = hours >= 12 ? 'p' : 'a';
+    hours = hours % 12 || 12;
+    return `${hours}:${minutesStr}${suffix}`;
+  }
+
+  function scrollToDay(dayName) {
+    const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
+    if (targetElement) {
+      const yOffset = -180;
+      const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  }
+
   if (!isAdminUnlocked) {
     return (
       <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
@@ -161,87 +189,122 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+    <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
       {/* Top Admin Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-black text-white p-6 rounded-lg shadow-md gap-4">
+      <div className="flex justify-between items-center bg-black text-white p-4 rounded-lg shadow-md">
         <div>
-          <h1 className="text-2xl font-serif font-bold">Admin Management Portal</h1>
+          <h1 className="text-xl font-serif font-bold">Admin Portal</h1>
           <p className="text-xs text-amber-500 uppercase tracking-widest">Cherry Blossom Equestrian</p>
         </div>
         <button
           onClick={() => { localStorage.removeItem('cbe_admin_code'); setIsAdminUnlocked(false); }}
           className="text-xs bg-zinc-800 px-3 py-1.5 rounded hover:bg-zinc-700 text-zinc-300"
         >
-          Exit Admin Mode
+          Exit
         </button>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b border-zinc-200">
+      <div className="flex gap-2 border-b border-zinc-200 text-sm">
         <button
           onClick={() => setActiveTab('active-weeks')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition border-b-2 ${
+          className={`flex items-center gap-1.5 px-3 py-2 font-medium transition border-b-2 ${
             activeTab === 'active-weeks' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
           }`}
         >
-          <Calendar className="w-4 h-4" /> Active Weeks Overrides
+          <Calendar className="w-4 h-4" /> Active Overrides
         </button>
         <button
           onClick={() => setActiveTab('master-plan')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition border-b-2 ${
+          className={`flex items-center gap-1.5 px-3 py-2 font-medium transition border-b-2 ${
             activeTab === 'master-plan' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
           }`}
         >
-          <Users className="w-4 h-4" /> Master Plan Template
+          <Users className="w-4 h-4" /> Master Template
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition border-b-2 ${
+          className={`flex items-center gap-1.5 px-3 py-2 font-medium transition border-b-2 ${
             activeTab === 'settings' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
           }`}
         >
-          <Key className="w-4 h-4" /> System Settings
+          <Key className="w-4 h-4" /> Settings
         </button>
       </div>
 
       {/* TAB 1: ACTIVE WEEKS OVERRIDES */}
       {activeTab === 'active-weeks' && (
-        <div className="space-y-6">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {activeWeeks.map((week) => (
-              <button
-                key={week.id}
-                onClick={() => { setSelectedActiveWeek(week); fetchActiveLessons(week.id); }}
-                className={`px-4 py-2 rounded text-sm font-medium whitespace-nowrap transition ${
-                  selectedActiveWeek?.id === week.id ? 'bg-black text-white' : 'bg-zinc-200 text-zinc-800'
-                }`}
-              >
-                Week of {new Date(week.week_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
-              </button>
-            ))}
+        <div className="space-y-4">
+          {/* STICKY CONTROL CONTAINER */}
+          <div className="sticky top-0 z-30 bg-zinc-50 pt-1 pb-3 border-b border-zinc-200 shadow-sm space-y-2">
+            {/* Condensed Week Selector Tabs */}
+            <div className="grid grid-cols-4 gap-1.5 bg-zinc-200 p-1 rounded-lg text-center">
+              {activeWeeks.map((week) => {
+                const dateObj = new Date(week.week_start_date + 'T00:00:00');
+                const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+                const isSelected = selectedActiveWeek?.id === week.id;
+
+                return (
+                  <button
+                    key={week.id}
+                    onClick={() => { setSelectedActiveWeek(week); fetchActiveLessons(week.id); }}
+                    className={`py-1.5 text-xs font-semibold rounded transition ${
+                      isSelected ? 'bg-black text-white shadow-sm' : 'text-zinc-700 hover:bg-zinc-300'
+                    }`}
+                  >
+                    Wk. {formattedDate}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Day Quick Jump Buttons */}
+            <div className="flex justify-between gap-1 pt-1">
+              {daysList.map((day) => (
+                <button
+                  key={day.label}
+                  onClick={() => scrollToDay(day.fullDay)}
+                  className="flex-1 py-1 bg-white border border-zinc-300 rounded text-xs font-bold text-zinc-800 hover:bg-black hover:text-white transition text-center shadow-xs"
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeLessons.map((lesson) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            {activeLessons.map((lesson, index) => {
               const bookedMap = {};
               lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
 
+              const lessonDateObj = new Date(lesson.lesson_date + 'T00:00:00');
+              const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+              const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+
+              const isFirstLessonOfDay = index === 0 || activeLessons[index - 1]?.lesson_date !== lesson.lesson_date;
+
               return (
-                <div key={lesson.id} className="border rounded-lg p-4 bg-white shadow-sm space-y-3">
-                  <div className="flex justify-between items-start border-b pb-2">
+                <div
+                  key={lesson.id}
+                  id={isFirstLessonOfDay ? `admin-day-section-${fullDayName.toLowerCase()}` : undefined}
+                  className="border rounded-lg p-4 bg-white shadow-sm space-y-3"
+                >
+                  <div className="flex justify-between items-start border-b pb-2 gap-2">
                     <div>
                       <span className="text-xs font-bold text-amber-700 uppercase">
-                        {new Date(lesson.lesson_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'numeric', day: 'numeric', timeZone: 'UTC' })}
+                        {fullDayName.toUpperCase()} — {monthDayDate}
                       </span>
-                      <h3 className="font-serif text-lg">{lesson.start_time.slice(0, 5)} - {lesson.title}</h3>
+                      <h3 className="font-serif text-lg font-normal">
+                        {formatTime12Hr(lesson.start_time)} - {lesson.title}
+                      </h3>
                     </div>
 
                     <input
                       type="text"
-                      placeholder="Add Note (e.g. Sick, Show)"
+                      placeholder="Note (Sick, Show)"
                       defaultValue={lesson.admin_note || ''}
                       onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
-                      className="text-xs border rounded px-2 py-1 bg-amber-50 w-36"
+                      className="text-xs border rounded px-2 py-1 bg-amber-50 w-32"
                     />
                   </div>
 
@@ -253,14 +316,14 @@ export default function AdminPage() {
                       return (
                         <div key={slotNum} className="flex justify-between items-center text-sm p-2 rounded bg-zinc-50 border">
                           <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
-                          <span className="flex-1 font-medium ml-2">
-                            {booking ? booking.client_name : <span className="text-zinc-400 italic">Empty Slot</span>}
+                          <span className="flex-1 font-medium ml-2 text-sm">
+                            {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Empty Slot</span>}
                           </span>
 
                           {booking ? (
                             <button
                               onClick={() => handleAdminRemoveBooking(booking.id)}
-                              className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1"
+                              className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1 font-medium"
                             >
                               <Trash2 className="w-3.5 h-3.5" /> Remove
                             </button>
@@ -269,7 +332,7 @@ export default function AdminPage() {
                               onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
                               className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
                             >
-                              <Plus className="w-3.5 h-3.5" /> Assign Rider
+                              <Plus className="w-3.5 h-3.5" /> Assign
                             </button>
                           )}
                         </div>
@@ -287,7 +350,7 @@ export default function AdminPage() {
       {activeTab === 'master-plan' && (
         <div className="space-y-6">
           <div className="bg-zinc-100 p-4 rounded-lg border space-y-3">
-            <h3 className="font-bold text-sm text-zinc-800">Add New Recurring Master Slot</h3>
+            <h3 className="font-bold text-sm text-zinc-800">Add Recurring Master Slot</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <select
                 value={newMasterLesson.day_of_week}
@@ -337,7 +400,7 @@ export default function AdminPage() {
               <div key={lesson.id} className="border rounded p-4 bg-white flex justify-between items-center">
                 <div>
                   <span className="text-xs font-bold text-amber-700 uppercase">{daysOfWeek[lesson.day_of_week - 1]}</span>
-                  <h4 className="font-serif text-base">{lesson.start_time.slice(0, 5)} - {lesson.title} ({lesson.max_capacity} Slots)</h4>
+                  <h4 className="font-serif text-base">{formatTime12Hr(lesson.start_time)} - {lesson.title} ({lesson.max_capacity} Slots)</h4>
                 </div>
                 <button
                   onClick={() => handleDeleteMasterLesson(lesson.id)}
