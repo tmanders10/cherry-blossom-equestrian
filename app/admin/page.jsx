@@ -559,14 +559,14 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Grouped Master Lessons with Calibrated Sticky Offset (top-[115px]) */}
+          {/* Grouped Master Lessons with Calibrated Sticky Offset (top-[92px]) */}
           <div className="space-y-6">
             {Object.keys(groupedMasterLessons).map((dayName) => {
               const dayLessons = groupedMasterLessons[dayName];
 
               return (
                 <div key={dayName} className="space-y-2">
-                  <div className="sticky top-[115px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                  <div className="sticky top-[92px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
                     <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
                       {dayName}
                     </span>
