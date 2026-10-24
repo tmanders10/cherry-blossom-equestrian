@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock, Plus, Trash2, Calendar, Users, Key } from 'lucide-react';
+import { Lock, Plus, Trash2, Calendar, Users, Key, UserPlus, X } from 'lucide-react';
 
 export default function AdminPage() {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
@@ -17,6 +17,14 @@ export default function AdminPage() {
   const [selectedActiveWeek, setSelectedActiveWeek] = useState(null);
   const [activeLessons, setActiveLessons] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Monday');
+
+  // One-Off Session State (For Active Weeks)
+  const [newOneOffLesson, setNewOneOffLesson] = useState({
+    lesson_date: '',
+    start_time: '16:30',
+    title: 'Group Lesson',
+    max_capacity: 4
+  });
 
   // Settings State
   const [newCommunityPasscode, setNewCommunityPasscode] = useState('');
@@ -67,13 +75,31 @@ export default function AdminPage() {
       fetchMasterPlan();
       setNewMasterLesson({ day_of_week: 1, start_time: '16:30', title: 'Group Lesson', max_capacity: 4 });
     } else {
-      alert('Error adding master lesson slot');
+      alert('Error adding master training session');
     }
   }
 
   async function handleDeleteMasterLesson(id) {
-    if (!confirm('Delete this recurring slot template?')) return;
+    if (!confirm('Delete this recurring training session?')) return;
     await supabase.from('master_lessons').delete().eq('id', id);
+    fetchMasterPlan();
+  }
+
+  async function handleAddMasterRegular(masterLessonId, slotIndex) {
+    const name = prompt('Enter regular rider Name & Last Initial (e.g., Sofie H.):');
+    if (!name) return;
+
+    await supabase.from('master_regulars').insert([{
+      master_lesson_id: masterLessonId,
+      slot_index: slotIndex,
+      client_name: name.trim()
+    }]);
+    fetchMasterPlan();
+  }
+
+  async function handleRemoveMasterRegular(regularId) {
+    if (!confirm('Remove regular rider from this master slot?')) return;
+    await supabase.from('master_regulars').delete().eq('id', regularId);
     fetchMasterPlan();
   }
 
@@ -89,6 +115,7 @@ export default function AdminPage() {
     if (data && data.length > 0) {
       setActiveWeeks(data);
       setSelectedActiveWeek(data[0]);
+      setNewOneOffLesson(prev => ({ ...prev, lesson_date: data[0].week_start_date }));
       fetchActiveLessons(data[0].id);
     }
   }
@@ -102,6 +129,31 @@ export default function AdminPage() {
       .order('start_time', { ascending: true });
 
     if (data) setActiveLessons(data);
+  }
+
+  async function handleAddOneOffLesson() {
+    if (!selectedActiveWeek || !newOneOffLesson.lesson_date) return;
+
+    const { error } = await supabase.from('active_lessons').insert([{
+      active_week_id: selectedActiveWeek.id,
+      lesson_date: newOneOffLesson.lesson_date,
+      start_time: newOneOffLesson.start_time,
+      title: newOneOffLesson.title,
+      max_capacity: newOneOffLesson.max_capacity
+    }]);
+
+    if (!error) {
+      fetchActiveLessons(selectedActiveWeek.id);
+      alert('One-off training session added successfully!');
+    } else {
+      alert('Error adding one-off session');
+    }
+  }
+
+  async function handleDeleteActiveLesson(lessonId) {
+    if (!confirm('Delete this training session from the active week schedule?')) return;
+    await supabase.from('active_lessons').delete().eq('id', lessonId);
+    fetchActiveLessons(selectedActiveWeek.id);
   }
 
   async function handleUpdateAdminNote(lessonId, note) {
@@ -257,7 +309,8 @@ export default function AdminPage() {
                     key={week.id}
                     onClick={() => {
                       setSelectedActiveWeek(week);
-                      setSelectedDay('Monday'); // Default to 'M' when selecting a week
+                      setSelectedDay('Monday');
+                      setNewOneOffLesson(prev => ({ ...prev, lesson_date: week.week_start_date }));
                       fetchActiveLessons(week.id);
                     }}
                     className={`py-1.5 text-xs font-semibold rounded transition ${
@@ -300,76 +353,133 @@ export default function AdminPage() {
 
       {/* TAB 1: ACTIVE WEEKS OVERRIDES */}
       {activeTab === 'active-weeks' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          {activeLessons.map((lesson, index) => {
-            const bookedMap = {};
-            lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
+        <div className="space-y-6 pt-2">
+          {/* ADD ONE-OFF TRAINING SESSION FORM */}
+          <div className="bg-amber-50/50 p-4 rounded-lg border border-amber-200 space-y-3">
+            <h3 className="font-bold text-sm text-amber-900 flex items-center gap-1.5">
+              <Plus className="w-4 h-4 text-amber-700" /> Add One-Off Training Session
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <input
+                type="date"
+                value={newOneOffLesson.lesson_date}
+                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, lesson_date: e.target.value })}
+                className="border rounded p-2 text-sm bg-white"
+              />
 
-            const lessonDateObj = new Date(lesson.lesson_date + 'T00:00:00');
-            const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-            const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+              <input
+                type="time"
+                value={newOneOffLesson.start_time}
+                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, start_time: e.target.value })}
+                className="border rounded p-2 text-sm bg-white"
+              />
 
-            const isFirstLessonOfDay = index === 0 || activeLessons[index - 1]?.lesson_date !== lesson.lesson_date;
+              <input
+                type="text"
+                placeholder="Title (Evaluation, Private)"
+                value={newOneOffLesson.title}
+                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, title: e.target.value })}
+                className="border rounded p-2 text-sm bg-white"
+              />
 
-            return (
-              <div
-                key={lesson.id}
-                id={isFirstLessonOfDay ? `admin-day-section-${fullDayName.toLowerCase()}` : undefined}
-                className="border rounded-lg p-4 bg-white shadow-sm space-y-3"
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={newOneOffLesson.max_capacity}
+                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, max_capacity: parseInt(e.target.value) })}
+                className="border rounded p-2 text-sm bg-white"
+              />
+
+              <button
+                onClick={handleAddOneOffLesson}
+                className="bg-black text-white text-sm font-medium rounded p-2 hover:bg-zinc-800 col-span-2 md:col-span-1"
               >
-                <div className="flex justify-between items-start border-b pb-2 gap-2">
-                  <div>
-                    <span className="text-xs font-bold text-amber-700 uppercase">
-                      {fullDayName.toUpperCase()} — {monthDayDate}
-                    </span>
-                    <h3 className="font-serif text-lg font-normal">
-                      {formatTime12Hr(lesson.start_time)} - {lesson.title}
-                    </h3>
+                Add Session
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeLessons.map((lesson, index) => {
+              const bookedMap = {};
+              lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
+
+              const lessonDateObj = new Date(lesson.lesson_date + 'T00:00:00');
+              const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+              const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+
+              const isFirstLessonOfDay = index === 0 || activeLessons[index - 1]?.lesson_date !== lesson.lesson_date;
+
+              return (
+                <div
+                  key={lesson.id}
+                  id={isFirstLessonOfDay ? `admin-day-section-${fullDayName.toLowerCase()}` : undefined}
+                  className="border rounded-lg p-4 bg-white shadow-sm space-y-3"
+                >
+                  <div className="flex justify-between items-start border-b pb-2 gap-2">
+                    <div>
+                      <span className="text-xs font-bold text-amber-700 uppercase">
+                        {fullDayName.toUpperCase()} — {monthDayDate}
+                      </span>
+                      <h3 className="font-serif text-lg font-normal">
+                        {formatTime12Hr(lesson.start_time)} - {lesson.title}
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Note (Sick, Show)"
+                        defaultValue={lesson.admin_note || ''}
+                        onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
+                        className="text-xs border rounded px-2 py-1 bg-amber-50 w-28"
+                      />
+                      <button
+                        onClick={() => handleDeleteActiveLesson(lesson.id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Delete Session"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
-                  <input
-                    type="text"
-                    placeholder="Note (Sick, Show)"
-                    defaultValue={lesson.admin_note || ''}
-                    onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
-                    className="text-xs border rounded px-2 py-1 bg-amber-50 w-32"
-                  />
+                  <div className="space-y-1.5">
+                    {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
+                      const slotNum = idx + 1;
+                      const booking = bookedMap[slotNum];
+
+                      return (
+                        <div key={slotNum} className="flex justify-between items-center text-sm p-2 rounded bg-zinc-50 border">
+                          <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
+                          <span className="flex-1 font-medium ml-2 text-sm">
+                            {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Empty Slot</span>}
+                          </span>
+
+                          {booking ? (
+                            <button
+                              onClick={() => handleAdminRemoveBooking(booking.id)}
+                              className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1 font-medium"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Remove
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
+                              className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Assign
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-
-                <div className="space-y-1.5">
-                  {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
-                    const slotNum = idx + 1;
-                    const booking = bookedMap[slotNum];
-
-                    return (
-                      <div key={slotNum} className="flex justify-between items-center text-sm p-2 rounded bg-zinc-50 border">
-                        <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
-                        <span className="flex-1 font-medium ml-2 text-sm">
-                          {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Empty Slot</span>}
-                        </span>
-
-                        {booking ? (
-                          <button
-                            onClick={() => handleAdminRemoveBooking(booking.id)}
-                            className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1 font-medium"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" /> Remove
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
-                            className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
-                          >
-                            <Plus className="w-3.5 h-3.5" /> Assign
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -377,7 +487,7 @@ export default function AdminPage() {
       {activeTab === 'master-plan' && (
         <div className="space-y-6 pt-2">
           <div className="bg-zinc-100 p-4 rounded-lg border space-y-3">
-            <h3 className="font-bold text-sm text-zinc-800">Add Recurring Master Slot</h3>
+            <h3 className="font-bold text-sm text-zinc-800">Add Recurring Training Session</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <select
                 value={newMasterLesson.day_of_week}
@@ -417,26 +527,68 @@ export default function AdminPage() {
                 onClick={handleAddMasterLesson}
                 className="bg-black text-white text-sm font-medium rounded p-2 hover:bg-zinc-800 col-span-2 md:col-span-1"
               >
-                Add Slot
+                Add Session
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {masterLessons.map((lesson) => (
-              <div key={lesson.id} className="border rounded p-4 bg-white flex justify-between items-center">
-                <div>
-                  <span className="text-xs font-bold text-amber-700 uppercase">{daysOfWeek[lesson.day_of_week - 1]}</span>
-                  <h4 className="font-serif text-base">{formatTime12Hr(lesson.start_time)} - {lesson.title} ({lesson.max_capacity} Slots)</h4>
+            {masterLessons.map((lesson) => {
+              const regularMap = {};
+              lesson.master_regulars?.forEach((r) => { regularMap[r.slot_index] = r; });
+
+              return (
+                <div key={lesson.id} className="border rounded-lg p-4 bg-white shadow-sm space-y-3">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <div>
+                      <span className="text-xs font-bold text-amber-700 uppercase">{daysOfWeek[lesson.day_of_week - 1]}</span>
+                      <h4 className="font-serif text-base font-normal">{formatTime12Hr(lesson.start_time)} - {lesson.title}</h4>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteMasterLesson(lesson.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                      title="Delete Recurring Session"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Regular Rider Slot Assignments */}
+                  <div className="space-y-1.5">
+                    {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
+                      const slotNum = idx + 1;
+                      const regular = regularMap[slotNum];
+
+                      return (
+                        <div key={slotNum} className="flex justify-between items-center text-sm p-1.5 rounded bg-zinc-50 border">
+                          <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
+                          <span className="flex-1 font-medium ml-2 text-xs">
+                            {regular ? regular.client_name : <span className="text-zinc-400 italic font-normal">Unassigned Regular</span>}
+                          </span>
+
+                          {regular ? (
+                            <button
+                              onClick={() => handleRemoveMasterRegular(regular.id)}
+                              className="text-red-500 hover:text-red-700 p-1"
+                              title="Remove Regular"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleAddMasterRegular(lesson.id, slotNum)}
+                              className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
+                            >
+                              <UserPlus className="w-3.5 h-3.5" /> Assign Regular
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleDeleteMasterLesson(lesson.id)}
-                  className="text-red-500 hover:text-red-700 p-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
