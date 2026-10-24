@@ -208,7 +208,7 @@ export default function AdminPage() {
     setSelectedDay(dayName);
     const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const yOffset = -190;
+      const yOffset = -220;
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -220,6 +220,12 @@ export default function AdminPage() {
       return d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
     })
   );
+
+  const groupedActiveLessons = activeLessons.reduce((acc, lesson) => {
+    if (!acc[lesson.lesson_date]) acc[lesson.lesson_date] = [];
+    acc[lesson.lesson_date].push(lesson);
+    return acc;
+  }, {});
 
   if (!isAdminUnlocked) {
     return (
@@ -250,53 +256,53 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
-      {/* Top Admin Header */}
-      <div className="flex justify-between items-center bg-black text-white p-4 rounded-lg shadow-md">
-        <div>
-          <h1 className="text-xl font-serif font-bold">Admin Portal</h1>
-          <p className="text-xs text-amber-500 uppercase tracking-widest">Cherry Blossom Equestrian</p>
+      {/* ALL-IN-ONE STICKY TOP CONTAINER */}
+      <div className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-2 border-b border-zinc-200 shadow-sm space-y-2">
+        {/* Top Header */}
+        <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
+          <div>
+            <h1 className="text-base font-serif font-bold">Admin Portal</h1>
+            <p className="text-[10px] text-amber-500 uppercase tracking-widest">Cherry Blossom Equestrian</p>
+          </div>
+          <button
+            onClick={() => { localStorage.removeItem('cbe_admin_code'); setIsAdminUnlocked(false); }}
+            className="text-xs bg-zinc-800 px-2.5 py-1 rounded hover:bg-zinc-700 text-zinc-300"
+          >
+            Exit
+          </button>
         </div>
-        <button
-          onClick={() => { localStorage.removeItem('cbe_admin_code'); setIsAdminUnlocked(false); }}
-          className="text-xs bg-zinc-800 px-3 py-1.5 rounded hover:bg-zinc-700 text-zinc-300"
-        >
-          Exit
-        </button>
-      </div>
 
-      {/* STICKY CONTAINER FOR SUB-NAV, WEEK TABS, AND DAY BUTTONS */}
-      <div className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-3 border-b border-zinc-200 shadow-sm space-y-3">
         {/* Navigation Tabs */}
-        <div className="flex gap-2 border-b border-zinc-200 text-sm pb-1 bg-zinc-50 px-1">
+        <div className="flex gap-2 border-b border-zinc-200 text-xs pb-1 bg-zinc-50 px-1">
           <button
             onClick={() => setActiveTab('active-weeks')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 font-medium transition border-b-2 ${
+            className={`flex items-center gap-1.5 px-3 py-1 font-medium transition border-b-2 ${
               activeTab === 'active-weeks' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
             }`}
           >
-            <Calendar className="w-4 h-4" /> Active Overrides
+            <Calendar className="w-3.5 h-3.5" /> Lesson Maintenance
           </button>
           <button
             onClick={() => setActiveTab('master-plan')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 font-medium transition border-b-2 ${
+            className={`flex items-center gap-1.5 px-3 py-1 font-medium transition border-b-2 ${
               activeTab === 'master-plan' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
             }`}
           >
-            <Users className="w-4 h-4" /> Master Template
+            <Users className="w-3.5 h-3.5" /> Master Template
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 font-medium transition border-b-2 ${
+            className={`flex items-center gap-1.5 px-3 py-1 font-medium transition border-b-2 ${
               activeTab === 'settings' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
             }`}
           >
-            <Key className="w-4 h-4" /> Settings
+            <Key className="w-3.5 h-3.5" /> Settings
           </button>
         </div>
 
         {/* ACTIVE WEEKS SUB-STICKY CONTROLS */}
         {activeTab === 'active-weeks' && (
-          <div className="space-y-2 px-1">
+          <div className="space-y-1.5 px-1">
             {/* Condensed Week Selector Tabs */}
             <div className="grid grid-cols-4 gap-1.5 bg-zinc-200 p-1 rounded-lg text-center">
               {activeWeeks.map((week) => {
@@ -313,7 +319,7 @@ export default function AdminPage() {
                       setNewOneOffLesson(prev => ({ ...prev, lesson_date: week.week_start_date }));
                       fetchActiveLessons(week.id);
                     }}
-                    className={`py-1.5 text-xs font-semibold rounded transition ${
+                    className={`py-1 text-xs font-semibold rounded transition ${
                       isSelected ? 'bg-black text-white shadow-sm' : 'text-zinc-700 hover:bg-zinc-300'
                     }`}
                   >
@@ -324,7 +330,7 @@ export default function AdminPage() {
             </div>
 
             {/* Day Quick Jump Buttons */}
-            <div className="flex justify-between gap-1 pt-1">
+            <div className="flex justify-between gap-1">
               {daysList.map((day) => {
                 const hasLessons = activeDaysSet.has(day.fullDay);
                 const isDaySelected = selectedDay === day.fullDay;
@@ -351,27 +357,27 @@ export default function AdminPage() {
         )}
       </div>
 
-      {/* TAB 1: ACTIVE WEEKS OVERRIDES */}
+      {/* TAB 1: LESSON MAINTENANCE */}
       {activeTab === 'active-weeks' && (
-        <div className="space-y-6 pt-2">
+        <div className="space-y-6 pt-1">
           {/* ADD ONE-OFF TRAINING SESSION FORM */}
-          <div className="bg-amber-50/50 p-4 rounded-lg border border-amber-200 space-y-3">
-            <h3 className="font-bold text-sm text-amber-900 flex items-center gap-1.5">
-              <Plus className="w-4 h-4 text-amber-700" /> Add One-Off Training Session
+          <div className="bg-amber-50/60 p-3.5 rounded-lg border border-amber-200 space-y-2">
+            <h3 className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
+              <Plus className="w-3.5 h-3.5 text-amber-700" /> Add One-Off Training Session
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               <input
                 type="date"
                 value={newOneOffLesson.lesson_date}
                 onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, lesson_date: e.target.value })}
-                className="border rounded p-2 text-sm bg-white"
+                className="border rounded p-1.5 text-xs bg-white"
               />
 
               <input
                 type="time"
                 value={newOneOffLesson.start_time}
                 onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, start_time: e.target.value })}
-                className="border rounded p-2 text-sm bg-white"
+                className="border rounded p-1.5 text-xs bg-white"
               />
 
               <input
@@ -379,7 +385,7 @@ export default function AdminPage() {
                 placeholder="Title (Evaluation, Private)"
                 value={newOneOffLesson.title}
                 onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, title: e.target.value })}
-                className="border rounded p-2 text-sm bg-white"
+                className="border rounded p-1.5 text-xs bg-white"
               />
 
               <input
@@ -388,90 +394,106 @@ export default function AdminPage() {
                 max="10"
                 value={newOneOffLesson.max_capacity}
                 onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, max_capacity: parseInt(e.target.value) })}
-                className="border rounded p-2 text-sm bg-white"
+                className="border rounded p-1.5 text-xs bg-white"
               />
 
               <button
                 onClick={handleAddOneOffLesson}
-                className="bg-black text-white text-sm font-medium rounded p-2 hover:bg-zinc-800 col-span-2 md:col-span-1"
+                className="bg-black text-white text-xs font-medium rounded p-1.5 hover:bg-zinc-800 col-span-2 md:col-span-1"
               >
                 Add Session
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeLessons.map((lesson, index) => {
-              const bookedMap = {};
-              lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
-
-              const lessonDateObj = new Date(lesson.lesson_date + 'T00:00:00');
+          {/* COMPACT GROUPED DAILY LESSON LIST */}
+          <div className="space-y-6">
+            {Object.keys(groupedActiveLessons).map((dateStr) => {
+              const dayLessons = groupedActiveLessons[dateStr];
+              const lessonDateObj = new Date(dateStr + 'T00:00:00');
               const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
               const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
 
-              const isFirstLessonOfDay = index === 0 || activeLessons[index - 1]?.lesson_date !== lesson.lesson_date;
-
               return (
                 <div
-                  key={lesson.id}
-                  id={isFirstLessonOfDay ? `admin-day-section-${fullDayName.toLowerCase()}` : undefined}
-                  className="border rounded-lg p-4 bg-white shadow-sm space-y-3"
+                  key={dateStr}
+                  id={`admin-day-section-${fullDayName.toLowerCase()}`}
+                  className="space-y-2"
                 >
-                  <div className="flex justify-between items-start border-b pb-2 gap-2">
-                    <div>
-                      <span className="text-xs font-bold text-amber-700 uppercase">
-                        {fullDayName.toUpperCase()} — {monthDayDate}
-                      </span>
-                      <h3 className="font-serif text-lg font-normal">
-                        {formatTime12Hr(lesson.start_time)} - {lesson.title}
-                      </h3>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        placeholder="Note (Sick, Show)"
-                        defaultValue={lesson.admin_note || ''}
-                        onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
-                        className="text-xs border rounded px-2 py-1 bg-amber-50 w-28"
-                      />
-                      <button
-                        onClick={() => handleDeleteActiveLesson(lesson.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Delete Session"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                  {/* Sticky Day Header Banner */}
+                  <div className="sticky top-[160px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                    <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
+                      {fullDayName} — {monthDayDate}
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-medium">
+                      {dayLessons.length} {dayLessons.length === 1 ? 'Session' : 'Sessions'}
+                    </span>
                   </div>
 
-                  <div className="space-y-1.5">
-                    {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
-                      const slotNum = idx + 1;
-                      const booking = bookedMap[slotNum];
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-1">
+                    {dayLessons.map((lesson) => {
+                      const bookedMap = {};
+                      lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
 
                       return (
-                        <div key={slotNum} className="flex justify-between items-center text-sm p-2 rounded bg-zinc-50 border">
-                          <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
-                          <span className="flex-1 font-medium ml-2 text-sm">
-                            {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Empty Slot</span>}
-                          </span>
+                        <div
+                          key={lesson.id}
+                          className="border rounded-lg p-3 bg-white shadow-xs space-y-2"
+                        >
+                          <div className="flex justify-between items-center border-b pb-1.5 gap-2">
+                            <h3 className="font-serif text-base font-normal text-zinc-900">
+                              {formatTime12Hr(lesson.start_time)} - {lesson.title}
+                            </h3>
 
-                          {booking ? (
-                            <button
-                              onClick={() => handleAdminRemoveBooking(booking.id)}
-                              className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1 font-medium"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Remove
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
-                              className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
-                            >
-                              <Plus className="w-3.5 h-3.5" /> Assign
-                            </button>
-                          )}
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                placeholder="Note (Sick, Show)"
+                                defaultValue={lesson.admin_note || ''}
+                                onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
+                                className="text-[11px] border rounded px-1.5 py-0.5 bg-amber-50 w-28"
+                              />
+                              <button
+                                onClick={() => handleDeleteActiveLesson(lesson.id)}
+                                className="text-red-500 hover:text-red-700 p-0.5"
+                                title="Delete Session"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
+                              const slotNum = idx + 1;
+                              const booking = bookedMap[slotNum];
+
+                              return (
+                                <div key={slotNum} className="flex justify-between items-center text-xs p-1 rounded bg-zinc-50 border">
+                                  <span className="text-zinc-400 font-mono text-[11px]">{slotNum}.</span>
+                                  <span className="flex-1 font-medium ml-2 text-xs">
+                                    {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Empty Slot</span>}
+                                  </span>
+
+                                  {booking ? (
+                                    <button
+                                      onClick={() => handleAdminRemoveBooking(booking.id)}
+                                      className="text-red-600 hover:text-red-800 text-[11px] flex items-center gap-0.5 font-medium"
+                                    >
+                                      <Trash2 className="w-3 h-3" /> Remove
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
+                                      className="text-amber-700 hover:text-amber-900 text-[11px] flex items-center gap-0.5 font-medium"
+                                    >
+                                      <Plus className="w-3 h-3" /> Assign
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
