@@ -7,6 +7,7 @@ export default function ScheduleView() {
   const [activeWeeks, setActiveWeeks] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [lessons, setLessons] = useState([]);
+  const [selectedDay, setSelectedDay] = useState('Monday');
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [passcode, setPasscode] = useState('');
   const [showPasscodeModal, setShowPasscodeModal] = useState(false);
@@ -101,7 +102,6 @@ export default function ScheduleView() {
     }
   }
 
-  // Format 24hr time to 12hr format with lowercase 'a' or 'p'
   function formatTime12Hr(timeString) {
     if (!timeString) return '';
     const [hoursStr, minutesStr] = timeString.split(':');
@@ -111,19 +111,27 @@ export default function ScheduleView() {
     return `${hours}:${minutesStr}${suffix}`;
   }
 
-  // Jump scroll to the specific day's section
   function scrollToDay(dayName) {
+    setSelectedDay(dayName);
     const targetElement = document.getElementById(`day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const yOffset = -140; // Account for fixed sticky header
+      const yOffset = -140;
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   }
 
+  // Set of days that actually have lessons scheduled
+  const activeDaysSet = new Set(
+    lessons.map((lesson) => {
+      const d = new Date(lesson.lesson_date + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+    })
+  );
+
   return (
     <div className="max-w-5xl mx-auto p-3 space-y-4">
-      {/* Scrollable Section Header */}
+      {/* Header */}
       <div className="flex justify-between items-center bg-zinc-900 text-white p-3.5 rounded-lg shadow-md">
         <div>
           <h2 className="text-lg font-semibold">Lesson Schedule</h2>
@@ -141,7 +149,7 @@ export default function ScheduleView() {
         </button>
       </div>
 
-      {/* STICKY TOP CONTAINER: 4-Week Tabs & Day Jump Buttons */}
+      {/* STICKY TOP CONTAINER */}
       <div className="sticky top-0 z-30 bg-zinc-50 pt-1 pb-3 border-b border-zinc-200 shadow-sm space-y-2">
         {/* Condensed 4-Week Selector Tabs */}
         <div className="grid grid-cols-4 gap-1.5 bg-zinc-200 p-1 rounded-lg text-center">
@@ -153,7 +161,11 @@ export default function ScheduleView() {
             return (
               <button
                 key={week.id}
-                onClick={() => { setSelectedWeek(week); fetchLessonsForWeek(week.id); }}
+                onClick={() => {
+                  setSelectedWeek(week);
+                  setSelectedDay('Monday'); // Default to 'M' when selecting a week
+                  fetchLessonsForWeek(week.id);
+                }}
                 className={`py-1.5 text-xs font-semibold rounded transition ${
                   isSelected ? 'bg-black text-white shadow-sm' : 'text-zinc-700 hover:bg-zinc-300'
                 }`}
@@ -166,15 +178,27 @@ export default function ScheduleView() {
 
         {/* Day Quick Jump Buttons */}
         <div className="flex justify-between gap-1 pt-1">
-          {daysList.map((day) => (
-            <button
-              key={day.label}
-              onClick={() => scrollToDay(day.fullDay)}
-              className="flex-1 py-1 bg-white border border-zinc-300 rounded text-xs font-bold text-zinc-800 hover:bg-black hover:text-white transition text-center shadow-xs"
-            >
-              {day.label}
-            </button>
-          ))}
+          {daysList.map((day) => {
+            const hasLessons = activeDaysSet.has(day.fullDay);
+            const isDaySelected = selectedDay === day.fullDay;
+
+            return (
+              <button
+                key={day.label}
+                disabled={!hasLessons}
+                onClick={() => scrollToDay(day.fullDay)}
+                className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
+                  !hasLessons
+                    ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60'
+                    : isDaySelected
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
+                }`}
+              >
+                {day.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -188,7 +212,6 @@ export default function ScheduleView() {
           const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
           const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
 
-          // Check if this is the first lesson card for a day to attach the scroll anchor
           const isFirstLessonOfDay = index === 0 || lessons[index - 1]?.lesson_date !== lesson.lesson_date;
 
           return (
