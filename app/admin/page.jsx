@@ -227,6 +227,14 @@ export default function AdminPage() {
     return acc;
   }, {});
 
+  // Group Master Lessons by Day of Week
+  const groupedMasterLessons = masterLessons.reduce((acc, lesson) => {
+    const dayName = daysOfWeek[lesson.day_of_week - 1];
+    if (!acc[dayName]) acc[dayName] = [];
+    acc[dayName].push(lesson);
+    return acc;
+  }, {});
+
   if (!isAdminUnlocked) {
     return (
       <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
@@ -420,8 +428,8 @@ export default function AdminPage() {
                   id={`admin-day-section-${fullDayName.toLowerCase()}`}
                   className="space-y-2"
                 >
-                  {/* Sticky Day Header Banner */}
-                  <div className="sticky top-[160px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                  {/* Sticky Day Header Banner - Adjusted Position to top-[188px] */}
+                  <div className="sticky top-[188px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
                     <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
                       {fullDayName} — {monthDayDate}
                     </span>
@@ -554,56 +562,77 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {masterLessons.map((lesson) => {
-              const regularMap = {};
-              lesson.master_regulars?.forEach((r) => { regularMap[r.slot_index] = r; });
+          {/* GROUPED MASTER LESSONS WITH STICKY DAY BANNERS */}
+          <div className="space-y-6">
+            {Object.keys(groupedMasterLessons).map((dayName) => {
+              const dayLessons = groupedMasterLessons[dayName];
 
               return (
-                <div key={lesson.id} className="border rounded-lg p-4 bg-white shadow-sm space-y-3">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <div>
-                      <span className="text-xs font-bold text-amber-700 uppercase">{daysOfWeek[lesson.day_of_week - 1]}</span>
-                      <h4 className="font-serif text-base font-normal">{formatTime12Hr(lesson.start_time)} - {lesson.title}</h4>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteMasterLesson(lesson.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                      title="Delete Recurring Session"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                <div key={dayName} className="space-y-2">
+                  {/* Sticky Day Header Banner for Master Template */}
+                  <div className="sticky top-[108px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                    <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
+                      {dayName}
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-medium">
+                      {dayLessons.length} {dayLessons.length === 1 ? 'Recurring Session' : 'Recurring Sessions'}
+                    </span>
                   </div>
 
-                  {/* Regular Rider Slot Assignments */}
-                  <div className="space-y-1.5">
-                    {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
-                      const slotNum = idx + 1;
-                      const regular = regularMap[slotNum];
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
+                    {dayLessons.map((lesson) => {
+                      const regularMap = {};
+                      lesson.master_regulars?.forEach((r) => { regularMap[r.slot_index] = r; });
 
                       return (
-                        <div key={slotNum} className="flex justify-between items-center text-sm p-1.5 rounded bg-zinc-50 border">
-                          <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
-                          <span className="flex-1 font-medium ml-2 text-xs">
-                            {regular ? regular.client_name : <span className="text-zinc-400 italic font-normal">Unassigned Regular</span>}
-                          </span>
-
-                          {regular ? (
+                        <div key={lesson.id} className="border rounded-lg p-4 bg-white shadow-sm space-y-3">
+                          <div className="flex justify-between items-center border-b pb-2">
+                            <div>
+                              <span className="text-xs font-bold text-amber-700 uppercase">{dayName}</span>
+                              <h4 className="font-serif text-base font-normal">{formatTime12Hr(lesson.start_time)} - {lesson.title}</h4>
+                            </div>
                             <button
-                              onClick={() => handleRemoveMasterRegular(regular.id)}
+                              onClick={() => handleDeleteMasterLesson(lesson.id)}
                               className="text-red-500 hover:text-red-700 p-1"
-                              title="Remove Regular"
+                              title="Delete Recurring Session"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
-                          ) : (
-                            <button
-                              onClick={() => handleAddMasterRegular(lesson.id, slotNum)}
-                              className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
-                            >
-                              <UserPlus className="w-3.5 h-3.5" /> Assign Regular
-                            </button>
-                          )}
+                          </div>
+
+                          {/* Regular Rider Slot Assignments */}
+                          <div className="space-y-1.5">
+                            {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
+                              const slotNum = idx + 1;
+                              const regular = regularMap[slotNum];
+
+                              return (
+                                <div key={slotNum} className="flex justify-between items-center text-sm p-1.5 rounded bg-zinc-50 border">
+                                  <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
+                                  <span className="flex-1 font-medium ml-2 text-xs">
+                                    {regular ? regular.client_name : <span className="text-zinc-400 italic font-normal">Unassigned Regular</span>}
+                                  </span>
+
+                                  {regular ? (
+                                    <button
+                                      onClick={() => handleRemoveMasterRegular(regular.id)}
+                                      className="text-red-500 hover:text-red-700 p-1"
+                                      title="Remove Regular"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleAddMasterRegular(lesson.id, slotNum)}
+                                      className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
+                                    >
+                                      <UserPlus className="w-3.5 h-3.5" /> Assign Regular
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
