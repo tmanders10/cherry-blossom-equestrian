@@ -21,7 +21,7 @@ export default function ScheduleView() {
   }, []);
 
   async function fetchActiveWeeks() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('active_weeks')
       .select('*')
       .eq('is_archived', false)
@@ -121,7 +121,7 @@ export default function ScheduleView() {
               selectedWeek?.id === week.id ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
             }`}
           >
-            Week of {new Date(week.week_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            Week of {new Date(week.week_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
           </button>
         ))}
       </div>
@@ -137,12 +137,12 @@ export default function ScheduleView() {
               <div className="flex justify-between items-start border-b pb-2">
                 <div>
                   <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">
-                    {new Date(lesson.lesson_date).toLocaleDateString('en-US', { weekday: 'long' })}
+                    {new Date(lesson.lesson_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })}
                   </span>
                   <h3 className="font-serif text-lg">{lesson.start_time.slice(0, 5)} - {lesson.title}</h3>
                 </div>
                 {lesson.admin_note && (
-                  <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                  <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-medium">
                     {lesson.admin_note}
                   </span>
                 )}
