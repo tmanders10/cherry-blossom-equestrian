@@ -16,6 +16,7 @@ export default function AdminPage() {
   const [activeWeeks, setActiveWeeks] = useState([]);
   const [selectedActiveWeek, setSelectedActiveWeek] = useState(null);
   const [activeLessons, setActiveLessons] = useState([]);
+  const [selectedDay, setSelectedDay] = useState('Monday');
 
   // Settings State
   const [newCommunityPasscode, setNewCommunityPasscode] = useState('');
@@ -142,7 +143,6 @@ export default function AdminPage() {
     }
   }
 
-  // Format 24hr time to 12hr format with lowercase 'a' or 'p'
   function formatTime12Hr(timeString) {
     if (!timeString) return '';
     const [hoursStr, minutesStr] = timeString.split(':');
@@ -153,13 +153,21 @@ export default function AdminPage() {
   }
 
   function scrollToDay(dayName) {
+    setSelectedDay(dayName);
     const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const yOffset = -180;
+      const yOffset = -190;
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   }
+
+  const activeDaysSet = new Set(
+    activeLessons.map((lesson) => {
+      const d = new Date(lesson.lesson_date + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+    })
+  );
 
   if (!isAdminUnlocked) {
     return (
@@ -204,39 +212,39 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b border-zinc-200 text-sm">
-        <button
-          onClick={() => setActiveTab('active-weeks')}
-          className={`flex items-center gap-1.5 px-3 py-2 font-medium transition border-b-2 ${
-            activeTab === 'active-weeks' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
-          }`}
-        >
-          <Calendar className="w-4 h-4" /> Active Overrides
-        </button>
-        <button
-          onClick={() => setActiveTab('master-plan')}
-          className={`flex items-center gap-1.5 px-3 py-2 font-medium transition border-b-2 ${
-            activeTab === 'master-plan' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
-          }`}
-        >
-          <Users className="w-4 h-4" /> Master Template
-        </button>
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-1.5 px-3 py-2 font-medium transition border-b-2 ${
-            activeTab === 'settings' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
-          }`}
-        >
-          <Key className="w-4 h-4" /> Settings
-        </button>
-      </div>
+      {/* STICKY CONTAINER FOR SUB-NAV, WEEK TABS, AND DAY BUTTONS */}
+      <div className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-3 border-b border-zinc-200 shadow-sm space-y-3">
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 border-b border-zinc-200 text-sm pb-1 bg-zinc-50 px-1">
+          <button
+            onClick={() => setActiveTab('active-weeks')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 font-medium transition border-b-2 ${
+              activeTab === 'active-weeks' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
+            }`}
+          >
+            <Calendar className="w-4 h-4" /> Active Overrides
+          </button>
+          <button
+            onClick={() => setActiveTab('master-plan')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 font-medium transition border-b-2 ${
+              activeTab === 'master-plan' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
+            }`}
+          >
+            <Users className="w-4 h-4" /> Master Template
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 font-medium transition border-b-2 ${
+              activeTab === 'settings' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
+            }`}
+          >
+            <Key className="w-4 h-4" /> Settings
+          </button>
+        </div>
 
-      {/* TAB 1: ACTIVE WEEKS OVERRIDES */}
-      {activeTab === 'active-weeks' && (
-        <div className="space-y-4">
-          {/* STICKY CONTROL CONTAINER */}
-          <div className="sticky top-0 z-30 bg-zinc-50 pt-1 pb-3 border-b border-zinc-200 shadow-sm space-y-2">
+        {/* ACTIVE WEEKS SUB-STICKY CONTROLS */}
+        {activeTab === 'active-weeks' && (
+          <div className="space-y-2 px-1">
             {/* Condensed Week Selector Tabs */}
             <div className="grid grid-cols-4 gap-1.5 bg-zinc-200 p-1 rounded-lg text-center">
               {activeWeeks.map((week) => {
@@ -247,7 +255,11 @@ export default function AdminPage() {
                 return (
                   <button
                     key={week.id}
-                    onClick={() => { setSelectedActiveWeek(week); fetchActiveLessons(week.id); }}
+                    onClick={() => {
+                      setSelectedActiveWeek(week);
+                      setSelectedDay('Monday'); // Default to 'M' when selecting a week
+                      fetchActiveLessons(week.id);
+                    }}
                     className={`py-1.5 text-xs font-semibold rounded transition ${
                       isSelected ? 'bg-black text-white shadow-sm' : 'text-zinc-700 hover:bg-zinc-300'
                     }`}
@@ -260,95 +272,110 @@ export default function AdminPage() {
 
             {/* Day Quick Jump Buttons */}
             <div className="flex justify-between gap-1 pt-1">
-              {daysList.map((day) => (
-                <button
-                  key={day.label}
-                  onClick={() => scrollToDay(day.fullDay)}
-                  className="flex-1 py-1 bg-white border border-zinc-300 rounded text-xs font-bold text-zinc-800 hover:bg-black hover:text-white transition text-center shadow-xs"
-                >
-                  {day.label}
-                </button>
-              ))}
+              {daysList.map((day) => {
+                const hasLessons = activeDaysSet.has(day.fullDay);
+                const isDaySelected = selectedDay === day.fullDay;
+
+                return (
+                  <button
+                    key={day.label}
+                    disabled={!hasLessons}
+                    onClick={() => scrollToDay(day.fullDay)}
+                    className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
+                      !hasLessons
+                        ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60'
+                        : isDaySelected
+                        ? 'bg-black text-white border-black'
+                        : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
+        )}
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {activeLessons.map((lesson, index) => {
-              const bookedMap = {};
-              lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
+      {/* TAB 1: ACTIVE WEEKS OVERRIDES */}
+      {activeTab === 'active-weeks' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          {activeLessons.map((lesson, index) => {
+            const bookedMap = {};
+            lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
 
-              const lessonDateObj = new Date(lesson.lesson_date + 'T00:00:00');
-              const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-              const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+            const lessonDateObj = new Date(lesson.lesson_date + 'T00:00:00');
+            const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+            const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
 
-              const isFirstLessonOfDay = index === 0 || activeLessons[index - 1]?.lesson_date !== lesson.lesson_date;
+            const isFirstLessonOfDay = index === 0 || activeLessons[index - 1]?.lesson_date !== lesson.lesson_date;
 
-              return (
-                <div
-                  key={lesson.id}
-                  id={isFirstLessonOfDay ? `admin-day-section-${fullDayName.toLowerCase()}` : undefined}
-                  className="border rounded-lg p-4 bg-white shadow-sm space-y-3"
-                >
-                  <div className="flex justify-between items-start border-b pb-2 gap-2">
-                    <div>
-                      <span className="text-xs font-bold text-amber-700 uppercase">
-                        {fullDayName.toUpperCase()} — {monthDayDate}
-                      </span>
-                      <h3 className="font-serif text-lg font-normal">
-                        {formatTime12Hr(lesson.start_time)} - {lesson.title}
-                      </h3>
-                    </div>
-
-                    <input
-                      type="text"
-                      placeholder="Note (Sick, Show)"
-                      defaultValue={lesson.admin_note || ''}
-                      onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
-                      className="text-xs border rounded px-2 py-1 bg-amber-50 w-32"
-                    />
+            return (
+              <div
+                key={lesson.id}
+                id={isFirstLessonOfDay ? `admin-day-section-${fullDayName.toLowerCase()}` : undefined}
+                className="border rounded-lg p-4 bg-white shadow-sm space-y-3"
+              >
+                <div className="flex justify-between items-start border-b pb-2 gap-2">
+                  <div>
+                    <span className="text-xs font-bold text-amber-700 uppercase">
+                      {fullDayName.toUpperCase()} — {monthDayDate}
+                    </span>
+                    <h3 className="font-serif text-lg font-normal">
+                      {formatTime12Hr(lesson.start_time)} - {lesson.title}
+                    </h3>
                   </div>
 
-                  <div className="space-y-1.5">
-                    {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
-                      const slotNum = idx + 1;
-                      const booking = bookedMap[slotNum];
-
-                      return (
-                        <div key={slotNum} className="flex justify-between items-center text-sm p-2 rounded bg-zinc-50 border">
-                          <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
-                          <span className="flex-1 font-medium ml-2 text-sm">
-                            {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Empty Slot</span>}
-                          </span>
-
-                          {booking ? (
-                            <button
-                              onClick={() => handleAdminRemoveBooking(booking.id)}
-                              className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1 font-medium"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Remove
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
-                              className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
-                            >
-                              <Plus className="w-3.5 h-3.5" /> Assign
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Note (Sick, Show)"
+                    defaultValue={lesson.admin_note || ''}
+                    onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
+                    className="text-xs border rounded px-2 py-1 bg-amber-50 w-32"
+                  />
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="space-y-1.5">
+                  {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
+                    const slotNum = idx + 1;
+                    const booking = bookedMap[slotNum];
+
+                    return (
+                      <div key={slotNum} className="flex justify-between items-center text-sm p-2 rounded bg-zinc-50 border">
+                        <span className="text-zinc-400 font-mono text-xs">{slotNum}.</span>
+                        <span className="flex-1 font-medium ml-2 text-sm">
+                          {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Empty Slot</span>}
+                        </span>
+
+                        {booking ? (
+                          <button
+                            onClick={() => handleAdminRemoveBooking(booking.id)}
+                            className="text-red-600 hover:text-red-800 text-xs flex items-center gap-1 font-medium"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Remove
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
+                            className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Assign
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* TAB 2: MASTER PLAN TEMPLATE */}
       {activeTab === 'master-plan' && (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-2">
           <div className="bg-zinc-100 p-4 rounded-lg border space-y-3">
             <h3 className="font-bold text-sm text-zinc-800">Add Recurring Master Slot</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -416,7 +443,7 @@ export default function AdminPage() {
 
       {/* TAB 3: SYSTEM SETTINGS */}
       {activeTab === 'settings' && (
-        <div className="bg-white border rounded-lg p-6 max-w-md space-y-4">
+        <div className="bg-white border rounded-lg p-6 max-w-md space-y-4 mt-2">
           <h3 className="font-bold text-lg font-serif">Update Community Passcode</h3>
           <p className="text-xs text-zinc-600">This passcode allows riders/parents to unlock "Edit Mode" and book available slots.</p>
           <input
