@@ -14,6 +14,16 @@ export default function ScheduleView() {
   const [clientName, setClientName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const daysList = [
+    { label: 'M', fullDay: 'Monday' },
+    { label: 'Tu', fullDay: 'Tuesday' },
+    { label: 'W', fullDay: 'Wednesday' },
+    { label: 'Th', fullDay: 'Thursday' },
+    { label: 'Fr', fullDay: 'Friday' },
+    { label: 'Sa', fullDay: 'Saturday' },
+    { label: 'Su', fullDay: 'Sunday' },
+  ];
+
   useEffect(() => {
     const savedCode = localStorage.getItem('cbe_community_code');
     if (savedCode) verifyCode(savedCode, true);
@@ -21,7 +31,7 @@ export default function ScheduleView() {
   }, []);
 
   async function fetchActiveWeeks() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('active_weeks')
       .select('*')
       .eq('is_archived', false)
@@ -91,55 +101,110 @@ export default function ScheduleView() {
     }
   }
 
+  // Format 24hr time to 12hr format with lowercase 'a' or 'p'
+  function formatTime12Hr(timeString) {
+    if (!timeString) return '';
+    const [hoursStr, minutesStr] = timeString.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const suffix = hours >= 12 ? 'p' : 'a';
+    hours = hours % 12 || 12;
+    return `${hours}:${minutesStr}${suffix}`;
+  }
+
+  // Jump scroll to the specific day's section
+  function scrollToDay(dayName) {
+    const targetElement = document.getElementById(`day-section-${dayName.toLowerCase()}`);
+    if (targetElement) {
+      const yOffset = -140; // Account for fixed sticky header
+      const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  }
+
   return (
-    <div className="max-w-5xl mx-auto p-4 space-y-6">
-      {/* Top Header */}
-      <div className="flex justify-between items-center bg-zinc-900 text-white p-4 rounded-lg shadow-md">
+    <div className="max-w-5xl mx-auto p-3 space-y-4">
+      {/* Scrollable Section Header */}
+      <div className="flex justify-between items-center bg-zinc-900 text-white p-3.5 rounded-lg shadow-md">
         <div>
-          <h2 className="text-xl font-semibold">Lesson Schedule</h2>
+          <h2 className="text-lg font-semibold">Lesson Schedule</h2>
           <p className="text-xs text-zinc-400">4-Week Rolling Availability</p>
         </div>
 
         <button
           onClick={() => isUnlocked ? (setIsUnlocked(false), localStorage.removeItem('cbe_community_code')) : setShowPasscodeModal(true)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition ${
             isUnlocked ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
           }`}
         >
-          {isUnlocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-          {isUnlocked ? 'Edit Mode Unlocked' : 'Unlock to Sign Up'}
+          {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+          {isUnlocked ? 'Unlocked' : 'Unlock'}
         </button>
       </div>
 
-      {/* Week Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 border-b border-zinc-200">
-        {activeWeeks.map((week) => (
-          <button
-            key={week.id}
-            onClick={() => { setSelectedWeek(week); fetchLessonsForWeek(week.id); }}
-            className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition ${
-              selectedWeek?.id === week.id ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-            }`}
-          >
-            Week of {new Date(week.week_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
-          </button>
-        ))}
+      {/* STICKY TOP CONTAINER: 4-Week Tabs & Day Jump Buttons */}
+      <div className="sticky top-0 z-30 bg-zinc-50 pt-1 pb-3 border-b border-zinc-200 shadow-sm space-y-2">
+        {/* Condensed 4-Week Selector Tabs */}
+        <div className="grid grid-cols-4 gap-1.5 bg-zinc-200 p-1 rounded-lg text-center">
+          {activeWeeks.map((week) => {
+            const dateObj = new Date(week.week_start_date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+            const isSelected = selectedWeek?.id === week.id;
+
+            return (
+              <button
+                key={week.id}
+                onClick={() => { setSelectedWeek(week); fetchLessonsForWeek(week.id); }}
+                className={`py-1.5 text-xs font-semibold rounded transition ${
+                  isSelected ? 'bg-black text-white shadow-sm' : 'text-zinc-700 hover:bg-zinc-300'
+                }`}
+              >
+                Wk. {formattedDate}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Day Quick Jump Buttons */}
+        <div className="flex justify-between gap-1 pt-1">
+          {daysList.map((day) => (
+            <button
+              key={day.label}
+              onClick={() => scrollToDay(day.fullDay)}
+              className="flex-1 py-1 bg-white border border-zinc-300 rounded text-xs font-bold text-zinc-800 hover:bg-black hover:text-white transition text-center shadow-xs"
+            >
+              {day.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Daily Schedule Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {lessons.map((lesson) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        {lessons.map((lesson, index) => {
           const bookedMap = {};
           lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
 
+          const lessonDateObj = new Date(lesson.lesson_date + 'T00:00:00');
+          const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+          const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+
+          // Check if this is the first lesson card for a day to attach the scroll anchor
+          const isFirstLessonOfDay = index === 0 || lessons[index - 1]?.lesson_date !== lesson.lesson_date;
+
           return (
-            <div key={lesson.id} className="border border-zinc-200 rounded-lg p-4 bg-white shadow-sm space-y-3">
+            <div
+              key={lesson.id}
+              id={isFirstLessonOfDay ? `day-section-${fullDayName.toLowerCase()}` : undefined}
+              className="border border-zinc-200 rounded-lg p-4 bg-white shadow-sm space-y-3"
+            >
               <div className="flex justify-between items-start border-b pb-2">
                 <div>
                   <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">
-                    {new Date(lesson.lesson_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })}
+                    {fullDayName.toUpperCase()} — {monthDayDate}
                   </span>
-                  <h3 className="font-serif text-lg">{lesson.start_time.slice(0, 5)} - {lesson.title}</h3>
+                  <h3 className="font-serif text-lg font-normal">
+                    {formatTime12Hr(lesson.start_time)} - {lesson.title}
+                  </h3>
                 </div>
                 {lesson.admin_note && (
                   <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-medium">
@@ -156,9 +221,9 @@ export default function ScheduleView() {
 
                   return (
                     <div key={slotNum} className="flex justify-between items-center text-sm p-1.5 rounded bg-zinc-50 border border-zinc-100">
-                      <span className="text-zinc-500 font-mono w-6">{slotNum}.</span>
-                      <span className="flex-1 font-medium text-zinc-800">
-                        {booking ? booking.client_name : <span className="text-zinc-400 italic">Available Slot</span>}
+                      <span className="text-zinc-500 font-mono w-6 text-xs">{slotNum}.</span>
+                      <span className="flex-1 font-medium text-zinc-800 text-sm">
+                        {booking ? booking.client_name : <span className="text-zinc-400 italic font-normal">Available Slot</span>}
                       </span>
 
                       {booking && isUnlocked && (
@@ -174,7 +239,7 @@ export default function ScheduleView() {
                       {!booking && isUnlocked && (
                         <button
                           onClick={() => setBookingModal({ open: true, lessonId: lesson.id, slotIndex: slotNum })}
-                          className="flex items-center gap-1 text-xs bg-black text-white px-2 py-1 rounded hover:bg-zinc-800"
+                          className="flex items-center gap-1 text-xs bg-black text-white px-2.5 py-1 rounded hover:bg-zinc-800"
                         >
                           <UserPlus className="w-3 h-3" /> Sign Up
                         </button>
