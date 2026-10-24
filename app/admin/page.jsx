@@ -18,7 +18,7 @@ export default function AdminPage() {
   const [activeLessons, setActiveLessons] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Monday');
 
-  // One-Off Session State (For Active Weeks)
+  // One-Off Session State
   const [newOneOffLesson, setNewOneOffLesson] = useState({
     lesson_date: '',
     start_time: '16:30',
