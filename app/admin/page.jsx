@@ -208,7 +208,7 @@ export default function AdminPage() {
     setSelectedDay(dayName);
     const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const yOffset = -220;
+      const yOffset = -225;
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -227,7 +227,6 @@ export default function AdminPage() {
     return acc;
   }, {});
 
-  // Group Master Lessons by Day of Week
   const groupedMasterLessons = masterLessons.reduce((acc, lesson) => {
     const dayName = daysOfWeek[lesson.day_of_week - 1];
     if (!acc[dayName]) acc[dayName] = [];
@@ -264,7 +263,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
-      {/* ALL-IN-ONE STICKY TOP CONTAINER */}
+      {/* LOCKED STICKY CONTAINER FOR ADMIN CONTROL HEADERS */}
       <div className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-2 border-b border-zinc-200 shadow-sm space-y-2">
         {/* Top Header */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
@@ -308,10 +307,9 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* ACTIVE WEEKS SUB-STICKY CONTROLS */}
+        {/* ACTIVE WEEKS CONTROLS */}
         {activeTab === 'active-weeks' && (
           <div className="space-y-1.5 px-1">
-            {/* Condensed Week Selector Tabs */}
             <div className="grid grid-cols-4 gap-1.5 bg-zinc-200 p-1 rounded-lg text-center">
               {activeWeeks.map((week) => {
                 const dateObj = new Date(week.week_start_date + 'T00:00:00');
@@ -337,7 +335,6 @@ export default function AdminPage() {
               })}
             </div>
 
-            {/* Day Quick Jump Buttons */}
             <div className="flex justify-between gap-1">
               {daysList.map((day) => {
                 const hasLessons = activeDaysSet.has(day.fullDay);
@@ -368,7 +365,7 @@ export default function AdminPage() {
       {/* TAB 1: LESSON MAINTENANCE */}
       {activeTab === 'active-weeks' && (
         <div className="space-y-6 pt-1">
-          {/* ADD ONE-OFF TRAINING SESSION FORM */}
+          {/* Add One-Off Session Form */}
           <div className="bg-amber-50/60 p-3.5 rounded-lg border border-amber-200 space-y-2">
             <h3 className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
               <Plus className="w-3.5 h-3.5 text-amber-700" /> Add One-Off Training Session
@@ -414,7 +411,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* COMPACT GROUPED DAILY LESSON LIST */}
+          {/* Grouped Daily Lessons with Calibrated Sticky Day Banners */}
           <div className="space-y-6">
             {Object.keys(groupedActiveLessons).map((dateStr) => {
               const dayLessons = groupedActiveLessons[dateStr];
@@ -428,8 +425,8 @@ export default function AdminPage() {
                   id={`admin-day-section-${fullDayName.toLowerCase()}`}
                   className="space-y-2"
                 >
-                  {/* Sticky Day Header Banner - Adjusted Position to top-[188px] */}
-                  <div className="sticky top-[188px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                  {/* Fixed Offset to match locked sticky control height */}
+                  <div className="sticky top-[172px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
                     <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
                       {fullDayName} — {monthDayDate}
                     </span>
@@ -562,15 +559,15 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* GROUPED MASTER LESSONS WITH STICKY DAY BANNERS */}
+          {/* Grouped Master Lessons with Calibrated Sticky Day Banners */}
           <div className="space-y-6">
             {Object.keys(groupedMasterLessons).map((dayName) => {
               const dayLessons = groupedMasterLessons[dayName];
 
               return (
                 <div key={dayName} className="space-y-2">
-                  {/* Sticky Day Header Banner for Master Template */}
-                  <div className="sticky top-[108px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                  {/* Fixed Offset to match locked sticky tab navigation height */}
+                  <div className="sticky top-[104px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
                     <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
                       {dayName}
                     </span>
@@ -600,7 +597,6 @@ export default function AdminPage() {
                             </button>
                           </div>
 
-                          {/* Regular Rider Slot Assignments */}
                           <div className="space-y-1.5">
                             {Array.from({ length: lesson.max_capacity }).map((_, idx) => {
                               const slotNum = idx + 1;
@@ -644,7 +640,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* TAB 3: SYSTEM SETTINGS */}
+      {/* TAB 3: SETTINGS */}
       {activeTab === 'settings' && (
         <div className="bg-white border rounded-lg p-6 max-w-md space-y-4 mt-2">
           <h3 className="font-bold text-lg font-serif">Update Community Passcode</h3>
