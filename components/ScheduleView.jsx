@@ -108,9 +108,14 @@ export default function ScheduleView() {
     let hours = parseInt(hoursStr, 10);
     const suffix = hours >= 12 ? 'p' : 'a';
     hours = hours % 12 || 12;
-    return `${hours}:${minutesStr}${suffix}`; }  function scrollToDay(dayName) { setSelectedDay(dayName); const targetElement = document.getElementById(`day-section-${dayName.toLowerCase()}`);
+    return `${hours}:${minutesStr}${suffix}`;
+  }
+
+  function scrollToDay(dayName) {
+    setSelectedDay(dayName);
+    const targetElement = document.getElementById(`day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const yOffset = -180;
+      const yOffset = -190;
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -123,7 +128,6 @@ export default function ScheduleView() {
     })
   );
 
-  // Group lessons by their lesson_date
   const groupedLessons = lessons.reduce((acc, lesson) => {
     if (!acc[lesson.lesson_date]) acc[lesson.lesson_date] = [];
     acc[lesson.lesson_date].push(lesson);
@@ -188,11 +192,37 @@ export default function ScheduleView() {
                 key={day.label}
                 disabled={!hasLessons}
                 onClick={() => scrollToDay(day.fullDay)}
-                className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${ !hasLessons ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60' : isDaySelected ? 'bg-black text-white border-black' : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100' }`} > {day.label} </button> ); })} </div> </div>  {/* COMPACT GROUPED DAILY LESSON LIST */} <div className="space-y-6 pt-1"> {Object.keys(groupedLessons).map((dateStr) => { const dayLessons = groupedLessons[dateStr]; const lessonDateObj = new Date(dateStr + 'T00:00:00'); const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }); const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });  return ( <div key={dateStr} id={`day-section-${fullDayName.toLowerCase()}`}
+                className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
+                  !hasLessons
+                    ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60'
+                    : isDaySelected
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
+                }`}
+              >
+                {day.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* COMPACT GROUPED DAILY LESSON LIST */}
+      <div className="space-y-6 pt-1">
+        {Object.keys(groupedLessons).map((dateStr) => {
+          const dayLessons = groupedLessons[dateStr];
+          const lessonDateObj = new Date(dateStr + 'T00:00:00');
+          const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+          const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+
+          return (
+            <div
+              key={dateStr}
+              id={`day-section-${fullDayName.toLowerCase()}`}
               className="space-y-2"
             >
-              {/* Sticky Day Header Banner */}
-              <div className="sticky top-[132px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+              {/* Sticky Day Header Banner - Adjusted Position to top-[144px] */}
+              <div className="sticky top-[144px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
                 <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
                   {fullDayName} — {monthDayDate}
                 </span>
