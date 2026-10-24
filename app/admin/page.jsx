@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Lock, Plus, Trash2, Calendar, Users, Key, UserPlus, X } from 'lucide-react';
 
@@ -7,6 +7,10 @@ export default function AdminPage() {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
   const [activeTab, setActiveTab] = useState('active-weeks');
+
+  // Dynamic Header Height Measurement for Sticky Banner Calibration
+  const headerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   // Master Plan State
   const [masterLessons, setMasterLessons] = useState([]);
@@ -44,6 +48,19 @@ export default function AdminPage() {
     const savedAdmin = localStorage.getItem('cbe_admin_code');
     if (savedAdmin) verifyAdminCode(savedAdmin, true);
   }, []);
+
+  // Dynamically measure the exact height of the top sticky controls block
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, [activeTab, activeWeeks, selectedActiveWeek]);
 
   async function verifyAdminCode(codeToTest, silent = false) {
     const { data } = await supabase.rpc('verify_community_passcode', { passcode_input: codeToTest });
@@ -208,7 +225,7 @@ export default function AdminPage() {
     setSelectedDay(dayName);
     const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const yOffset = -230;
+      const yOffset = -(headerHeight + 10);
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -263,8 +280,8 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
-      {/* LOCKED STICKY TOP CONTAINER */}
-      <div className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2">
+      {/* MEASURED STICKY HEADER CONTAINER */}
+      <div ref={headerRef} className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2">
         {/* Top Header */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
           <div>
@@ -411,7 +428,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Grouped Daily Lessons with Calibrated Sticky Offset (top-[215px]) */}
+          {/* Grouped Daily Lessons with Dynamically Calculated Sticky Top Offset */}
           <div className="space-y-6">
             {Object.keys(groupedActiveLessons).map((dateStr) => {
               const dayLessons = groupedActiveLessons[dateStr];
@@ -425,7 +442,10 @@ export default function AdminPage() {
                   id={`admin-day-section-${fullDayName.toLowerCase()}`}
                   className="space-y-2"
                 >
-                  <div className="sticky top-[215px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                  <div
+                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm"
+                    style={{ top: `${headerHeight}px` }}
+                  >
                     <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
                       {fullDayName} — {monthDayDate}
                     </span>
@@ -559,14 +579,17 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Grouped Master Lessons with Calibrated Sticky Offset (top-[92px]) */}
+          {/* Grouped Master Lessons with Dynamically Calculated Sticky Top Offset */}
           <div className="space-y-6">
             {Object.keys(groupedMasterLessons).map((dayName) => {
               const dayLessons = groupedMasterLessons[dayName];
 
               return (
                 <div key={dayName} className="space-y-2">
-                  <div className="sticky top-[92px] z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm">
+                  <div
+                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm"
+                    style={{ top: `${headerHeight}px` }}
+                  >
                     <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
                       {dayName}
                     </span>
