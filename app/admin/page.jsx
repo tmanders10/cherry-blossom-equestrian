@@ -428,7 +428,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Grouped Daily Lessons with Dynamically Calculated Sticky Top Offset */}
+          {/* Grouped Daily Lessons */}
           <div className="space-y-6">
             {Object.keys(groupedActiveLessons).map((dateStr) => {
               const dayLessons = groupedActiveLessons[dateStr];
@@ -579,7 +579,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Grouped Master Lessons with Dynamically Calculated Sticky Top Offset */}
+          {/* Grouped Master Lessons */}
           <div className="space-y-6">
             {Object.keys(groupedMasterLessons).map((dayName) => {
               const dayLessons = groupedMasterLessons[dayName];
@@ -607,7 +607,6 @@ export default function AdminPage() {
                         <div key={lesson.id} className="border rounded-lg p-4 bg-white shadow-sm space-y-3">
                           <div className="flex justify-between items-center border-b pb-2">
                             <div>
-                              <span className="text-xs font-bold text-amber-700 uppercase">{dayName}</span>
                               <h4 className="font-serif text-base font-normal">{formatTime12Hr(lesson.start_time)} - {lesson.title}</h4>
                             </div>
                             <button
