@@ -293,6 +293,7 @@ export default function AdminPage() {
             placeholder="Enter passcode"
             value={adminPasscode}
             onChange={(e) => setAdminPasscode(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && verifyAdminCode(adminPasscode)}
             className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
           />
           <button
