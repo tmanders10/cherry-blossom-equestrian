@@ -7,7 +7,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Head Trainer Bio', href: '/bio', icon: Info },
+    { name: 'Head Trainer Bio', href: '/', icon: Info },
     { name: 'Schedule & Booking', href: '/schedule', icon: Calendar },
     { name: 'Admin Portal', href: '/admin', icon: Lock },
   ];
@@ -37,10 +37,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           </span>
         </div>
 
-        {/* Navigation Sequence: 1. Bio, 2. Schedule, 3. Admin */}
+        {/* Menu Title */}
         <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-3 px-2">
           Menu
         </div>
+
+        {/* Nav Links Sequence: 1. Bio (/), 2. Schedule (/schedule), 3. Admin (/admin) */}
         <nav className="space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -65,7 +67,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         </nav>
       </div>
 
-      {/* Footer Branding */}
+      {/* Footer */}
       <div className="text-[10px] text-zinc-500 text-center border-t border-zinc-800 pt-4 uppercase tracking-widest">
         &copy; Cherry Blossom Equestrian
       </div>
