@@ -16,7 +16,6 @@ export default function SidebarNav({ children }) {
 
   return (
     <>
-      {/* Google Fonts link for Playfair Display */}
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
@@ -27,13 +26,9 @@ export default function SidebarNav({ children }) {
         <div className="md:hidden sticky top-0 z-50 flex items-center justify-between bg-black text-white px-4 py-3 shadow-md h-[52px]">
           <Link href="/" className="flex items-center gap-2">
             <img
-              src="/dark%20%20square.png"
-              alt="Cherry Blossom Equestrian "
-              className="w-7 h-7 object-contain"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = '/dark logo.png';
-              }}
+              src="/dark%20logo%20square.png"
+              alt="Cherry Blossom Equestrian Logo"
+              className="w-8 h-8 object-contain"
             />
             <span
               className="text-sm font-bold tracking-wider text-[#e8b4b8]"
@@ -90,9 +85,9 @@ export default function SidebarNav({ children }) {
             <div className="space-y-2 border-b border-zinc-800/80 pb-5 text-center">
               <Link href="/" className="block">
                 <img
-                  src="/dark logo.png"
+                  src="/dark%20logo%20square.png"
                   alt="Cherry Blossom Equestrian Logo"
-                  className="w-44 h-auto mx-auto filter invert brightness-200"
+                  className="w-40 h-auto mx-auto object-contain"
                 />
               </Link>
               <p
