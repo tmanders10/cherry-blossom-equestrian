@@ -40,7 +40,7 @@ export default function HomePage() {
           className="text-2xl text-zinc-900 font-normal"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Charity Durgin
+          Charity R. Durgin
         </h3>
       </div>
 
