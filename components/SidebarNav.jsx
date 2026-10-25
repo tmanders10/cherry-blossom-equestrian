@@ -1,143 +1,74 @@
 'use client';
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, Shield, Info, Menu, X } from 'lucide-react';
+import { Info, Calendar, Lock } from 'lucide-react';
 
-export default function SidebarNav({ children }) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+export default function Sidebar({ isOpen, setIsOpen }) {
   const pathname = usePathname();
 
   const navItems = [
-    { label: 'Schedule & Booking', href: '/schedule', icon: Calendar },
-    { label: 'Head Trainer Bio', href: '/', icon: Info },
-    { label: 'Admin Portal', href: '/admin', icon: Shield },
+    { name: 'Head Trainer Bio', href: '/bio', icon: Info },
+    { name: 'Schedule & Booking', href: '/schedule', icon: Calendar },
+    { name: 'Admin Portal', href: '/admin', icon: Lock },
   ];
 
   return (
-    <>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
-      />
-
-      <div className="flex flex-col md:flex-row min-h-screen bg-white text-zinc-900">
-        {/* MOBILE STICKY TOP HEADER */}
-        <div className="md:hidden sticky top-0 z-50 flex items-center justify-between bg-black text-white px-4 py-3 shadow-md h-[52px]">
-          <Link href="/" className="flex items-center gap-2">
-            <img
-              src="/dark%20logo%20square.png"
-              alt="Cherry Blossom Equestrian Logo"
-              className="w-8 h-8 object-contain"
-            />
-            <span
-              className="text-sm font-bold tracking-wider text-[#e8b4b8]"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-            >
-              Cherry Blossom Equestrian
-            </span>
-          </Link>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-1 focus:outline-none text-zinc-300 hover:text-white"
-            aria-label="Toggle Navigation Menu"
+    <aside
+      className={`fixed top-0 left-0 z-40 w-64 h-screen bg-black text-white p-6 transition-transform ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } md:translate-x-0 flex flex-col justify-between`}
+    >
+      <div>
+        {/* Brand / Logo */}
+        <div className="flex flex-col items-center text-center mb-8 border-b border-zinc-800 pb-6">
+          <img
+            src="/logo.png"
+            alt="Cherry Blossom Equestrian Logo"
+            className="w-32 h-auto mb-3"
+          />
+          <h2
+            className="text-sm font-bold tracking-widest text-[#e8b4b8] uppercase"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            Cherry Blossom
+          </h2>
+          <span className="text-[10px] text-zinc-400 tracking-wider uppercase mt-1">
+            North Metro Atlanta
+          </span>
         </div>
 
-        {/* MOBILE SLIDE-OUT OVERLAY MENU */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-40 bg-black flex flex-col pt-16 px-6 space-y-4 text-white">
-            <p
-              className="text-xs uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-            >
-              Navigation
-            </p>
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 py-3 px-3 rounded-lg text-sm transition ${
-                    isActive
-                      ? 'bg-zinc-800 text-[#e8b4b8] border-l-4 border-[#e8b4b8] font-bold'
-                      : 'text-zinc-300 hover:text-white hover:bg-zinc-900'
-                  }`}
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                >
-                  <Icon className="w-5 h-5" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-
-        {/* DESKTOP FIXED SIDEBAR */}
-        <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 z-40 bg-black text-white p-6 justify-between border-r border-zinc-800 shadow-xl">
-          <div className="space-y-6">
-            {/* Logo Header */}
-            <div className="space-y-2 border-b border-zinc-800/80 pb-5 text-center">
-              <Link href="/" className="block">
-                <img
-                  src="/dark%20logo%20square.png"
-                  alt="Cherry Blossom Equestrian Logo"
-                  className="w-40 h-auto mx-auto object-contain"
-                />
+        {/* Navigation Sequence: 1. Bio, 2. Schedule, 3. Admin */}
+        <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-3 px-2">
+          Menu
+        </div>
+        <nav className="space-y-1.5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setIsOpen && setIsOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs transition border ${
+                  isActive
+                    ? 'bg-zinc-900 border-zinc-700 text-[#e8b4b8] font-bold shadow-xs'
+                    : 'border-transparent text-zinc-300 hover:text-white hover:bg-zinc-900/60'
+                }`}
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-[#e8b4b8]' : 'text-zinc-400'}`} />
+                {item.name}
               </Link>
-              <p
-                className="text-xs uppercase tracking-widest text-[#e8b4b8] font-semibold"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-              >
-                North Metro Atlanta
-              </p>
-            </div>
-
-            {/* Navigation Links */}
-            <nav className="space-y-1.5">
-              <p
-                className="text-xs uppercase tracking-widest text-zinc-500 px-3 mb-2"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-              >
-                Menu
-              </p>
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm transition ${
-                      isActive
-                        ? 'bg-zinc-800 text-[#e8b4b8] border-l-2 border-[#e8b4b8] font-bold'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                    }`}
-                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-
-          <footer className="text-[10px] text-zinc-600 uppercase tracking-widest text-center border-t border-zinc-900 pt-4">
-            &copy; {new Date().getFullYear()} Cherry Blossom Equestrian
-          </footer>
-        </aside>
-
-        {/* MAIN CONTENT CONTAINER */}
-        <main className="flex-1 md:ml-64 w-full min-h-screen">
-          {children}
-        </main>
+            );
+          })}
+        </nav>
       </div>
-    </>
+
+      {/* Footer Branding */}
+      <div className="text-[10px] text-zinc-500 text-center border-t border-zinc-800 pt-4 uppercase tracking-widest">
+        &copy; Cherry Blossom Equestrian
+      </div>
+    </aside>
   );
 }
