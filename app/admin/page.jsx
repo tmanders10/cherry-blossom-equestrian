@@ -281,7 +281,7 @@ export default function AdminPage() {
   return (
     <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
       {/* MEASURED STICKY HEADER CONTAINER */}
-      <div ref={headerRef} className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2">
+      <div ref={headerRef} className="sticky top-[52px] md:top-0 z-30 bg-zinc-50 pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2">
         {/* Top Header */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
           <div>
