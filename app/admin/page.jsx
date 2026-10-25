@@ -225,7 +225,7 @@ export default function AdminPage() {
     setSelectedDay(dayName);
     const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const mobileOffset = 52;
+      const mobileOffset = typeof window !== 'undefined' && window.innerWidth < 768 ? 52 : 0;
       const yOffset = -(headerHeight + mobileOffset + 10);
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
@@ -285,12 +285,12 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
-      {/* MEASURED STICKY HEADER CONTAINER (Accounts for top-[52px] mobile header) */}
+      {/* MEASURED STICKY HEADER CONTAINER */}
       <div
         ref={headerRef}
         className="sticky top-[52px] md:top-0 z-30 bg-white/95 backdrop-blur-xs pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2"
       >
-        {/* Top Header */}
+        {/* Top Header Card - White Subtitle Font */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
           <div>
             <h1
@@ -299,7 +299,7 @@ export default function AdminPage() {
             >
               Admin Portal
             </h1>
-            <p className="text-[10px] text-amber-500 uppercase tracking-widest">
+            <p className="text-[10px] text-zinc-300 uppercase tracking-widest">
               Cherry Blossom Equestrian
             </p>
           </div>
@@ -472,8 +472,8 @@ export default function AdminPage() {
                   className="space-y-2"
                 >
                   <div
-                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm"
-                    style={{ top: `calc(52px + ${headerHeight}px)` }}
+                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
+                    style={{ '--header-height': `${headerHeight}px` }}
                   >
                     <span
                       className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
@@ -628,8 +628,8 @@ export default function AdminPage() {
               return (
                 <div key={dayName} className="space-y-2">
                   <div
-                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm"
-                    style={{ top: `calc(52px + ${headerHeight}px)` }}
+                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
+                    style={{ '--header-height': `${headerHeight}px` }}
                   >
                     <span
                       className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
