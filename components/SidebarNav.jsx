@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Info, Calendar, Lock } from 'lucide-react';
 
-export default function Sidebar({ isOpen, setIsOpen }) {
+export default function SidebarNav({ isOpen, setIsOpen }) {
   const pathname = usePathname();
 
   const navItems = [
@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           Menu
         </div>
 
-        {/* Nav Links Sequence: 1. Bio (/), 2. Schedule (/schedule), 3. Admin (/admin) */}
+        {/* Nav Links: 1. Bio (/), 2. Schedule (/schedule), 3. Admin (/admin) */}
         <nav className="space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
