@@ -290,7 +290,7 @@ export default function AdminPage() {
         ref={headerRef}
         className="sticky top-[52px] md:top-0 z-30 bg-white/95 backdrop-blur-xs pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2"
       >
-        {/* Top Header Card - White Subtitle Font */}
+        {/* Top Header Card */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
           <div>
             <h1
