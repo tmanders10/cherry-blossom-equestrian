@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Calendar, UserCheck, Lock, Unlock, AlertCircle } from 'lucide-react';
+import { Lock, Unlock } from 'lucide-react';
 
 export default function SchedulePage() {
   const [activeWeeks, setActiveWeeks] = useState([]);
@@ -46,6 +46,36 @@ export default function SchedulePage() {
     window.addEventListener('resize', updateHeaderHeight);
     return () => window.removeEventListener('resize', updateHeaderHeight);
   }, [selectedWeek, activeWeeks]);
+
+  // Dynamic Scroll Observer to Highlight Active Day Jump Button as User Scrolls
+  useEffect(() => {
+    if (lessons.length === 0) return;
+
+    const observerOptions = {
+      root: null,
+      rootMargin: `-${headerHeight + 60}px 0px -60% 0px`,
+      threshold: 0,
+    };
+
+    const handleIntersect = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const dayId = entry.target.id;
+          const dayName = dayId.replace('day-section-', '');
+          const matchedDay = daysList.find(d => d.fullDay.toLowerCase() === dayName);
+          if (matchedDay) {
+            setSelectedDay(matchedDay.fullDay);
+          }
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    const dayElements = document.querySelectorAll('[id^="day-section-"]');
+    dayElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [lessons, headerHeight]);
 
   async function fetchActiveWeeks() {
     const { data } = await supabase
@@ -226,7 +256,7 @@ export default function SchedulePage() {
           })}
         </div>
 
-        {/* Day Quick Jump Navigation */}
+        {/* Day Quick Jump Navigation (Dynamic Active Day Highlight) */}
         <div className="flex justify-between gap-1">
           {daysList.map((day) => {
             const hasLessons = activeDaysSet.has(day.fullDay);
