@@ -225,7 +225,8 @@ export default function AdminPage() {
     setSelectedDay(dayName);
     const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
     if (targetElement) {
-      const yOffset = -(headerHeight + 10);
+      const mobileOffset = 52;
+      const yOffset = -(headerHeight + mobileOffset + 10);
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -255,7 +256,10 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg max-w-sm w-full p-6 space-y-4 shadow-xl text-zinc-900">
-          <div className="flex items-center gap-2 text-zinc-800 font-serif font-bold text-xl">
+          <div
+            className="flex items-center gap-2 text-zinc-900 font-bold text-xl"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
             <Lock className="w-5 h-5 text-amber-600" />
             Admin Portal Access
           </div>
@@ -265,11 +269,12 @@ export default function AdminPage() {
             placeholder="Enter passcode"
             value={adminPasscode}
             onChange={(e) => setAdminPasscode(e.target.value)}
-            className="w-full border rounded p-2 text-sm"
+            className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
           />
           <button
             onClick={() => verifyAdminCode(adminPasscode)}
-            className="w-full bg-black text-white py-2 rounded text-sm font-medium hover:bg-zinc-800"
+            className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Authenticate Admin
           </button>
@@ -280,45 +285,64 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
-      {/* MEASURED STICKY HEADER CONTAINER */}
-      <div ref={headerRef} className="sticky top-0 z-30 bg-zinc-50 pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2">
+      {/* MEASURED STICKY HEADER CONTAINER (Accounts for top-[52px] mobile header) */}
+      <div
+        ref={headerRef}
+        className="sticky top-[52px] md:top-0 z-30 bg-white/95 backdrop-blur-xs pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2"
+      >
         {/* Top Header */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
           <div>
-            <h1 className="text-base font-serif font-bold">Admin Portal</h1>
-            <p className="text-[10px] text-amber-500 uppercase tracking-widest">Cherry Blossom Equestrian</p>
+            <h1
+              className="text-base font-bold text-[#e8b4b8]"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Admin Portal
+            </h1>
+            <p className="text-[10px] text-amber-500 uppercase tracking-widest">
+              Cherry Blossom Equestrian
+            </p>
           </div>
           <button
             onClick={() => { localStorage.removeItem('cbe_admin_code'); setIsAdminUnlocked(false); }}
-            className="text-xs bg-zinc-800 px-2.5 py-1 rounded hover:bg-zinc-700 text-zinc-300"
+            className="text-xs bg-zinc-800 px-2.5 py-1 rounded hover:bg-zinc-700 text-zinc-300 transition"
           >
             Exit
           </button>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-2 border-b border-zinc-200 text-xs pb-1 bg-zinc-50 px-1">
+        <div className="flex gap-2 border-b border-zinc-200 text-xs pb-1 bg-zinc-50 px-1 rounded">
           <button
             onClick={() => setActiveTab('active-weeks')}
-            className={`flex items-center gap-1.5 px-3 py-1 font-medium transition border-b-2 ${
-              activeTab === 'active-weeks' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition ${
+              activeTab === 'active-weeks'
+                ? 'bg-black text-[#e8b4b8] font-bold'
+                : 'text-zinc-600 hover:text-black hover:bg-zinc-200'
             }`}
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             <Calendar className="w-3.5 h-3.5" /> Lesson Maintenance
           </button>
           <button
             onClick={() => setActiveTab('master-plan')}
-            className={`flex items-center gap-1.5 px-3 py-1 font-medium transition border-b-2 ${
-              activeTab === 'master-plan' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition ${
+              activeTab === 'master-plan'
+                ? 'bg-black text-[#e8b4b8] font-bold'
+                : 'text-zinc-600 hover:text-black hover:bg-zinc-200'
             }`}
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             <Users className="w-3.5 h-3.5" /> Master Template
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-1.5 px-3 py-1 font-medium transition border-b-2 ${
-              activeTab === 'settings' ? 'border-amber-600 text-amber-700 font-bold' : 'border-transparent text-zinc-600 hover:text-black'
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition ${
+              activeTab === 'settings'
+                ? 'bg-black text-[#e8b4b8] font-bold'
+                : 'text-zinc-600 hover:text-black hover:bg-zinc-200'
             }`}
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             <Key className="w-3.5 h-3.5" /> Settings
           </button>
@@ -327,7 +351,7 @@ export default function AdminPage() {
         {/* ACTIVE WEEKS CONTROLS */}
         {activeTab === 'active-weeks' && (
           <div className="space-y-1.5 px-1">
-            <div className="grid grid-cols-4 gap-1.5 bg-zinc-200 p-1 rounded-lg text-center">
+            <div className="grid grid-cols-4 gap-1.5 bg-zinc-100 p-1 rounded-lg text-center">
               {activeWeeks.map((week) => {
                 const dateObj = new Date(week.week_start_date + 'T00:00:00');
                 const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
@@ -343,8 +367,9 @@ export default function AdminPage() {
                       fetchActiveLessons(week.id);
                     }}
                     className={`py-1 text-xs font-semibold rounded transition ${
-                      isSelected ? 'bg-black text-white shadow-sm' : 'text-zinc-700 hover:bg-zinc-300'
+                      isSelected ? 'bg-black text-[#e8b4b8] shadow-xs' : 'text-zinc-700 hover:bg-zinc-200'
                     }`}
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                   >
                     Wk. {formattedDate}
                   </button>
@@ -366,7 +391,7 @@ export default function AdminPage() {
                       !hasLessons
                         ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60'
                         : isDaySelected
-                        ? 'bg-black text-white border-black'
+                        ? 'bg-black text-[#e8b4b8] border-black'
                         : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
                     }`}
                   >
@@ -384,7 +409,10 @@ export default function AdminPage() {
         <div className="space-y-6 pt-1">
           {/* Add One-Off Session Form */}
           <div className="bg-amber-50/60 p-3.5 rounded-lg border border-amber-200 space-y-2">
-            <h3 className="font-bold text-xs text-amber-900 flex items-center gap-1.5">
+            <h3
+              className="font-bold text-xs text-amber-900 flex items-center gap-1.5"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
               <Plus className="w-3.5 h-3.5 text-amber-700" /> Add One-Off Training Session
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -421,7 +449,8 @@ export default function AdminPage() {
 
               <button
                 onClick={handleAddOneOffLesson}
-                className="bg-black text-white text-xs font-medium rounded p-1.5 hover:bg-zinc-800 col-span-2 md:col-span-1"
+                className="bg-black text-[#e8b4b8] text-xs font-semibold rounded p-1.5 hover:bg-zinc-800 transition col-span-2 md:col-span-1"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
                 Add Session
               </button>
@@ -444,9 +473,12 @@ export default function AdminPage() {
                 >
                   <div
                     className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm"
-                    style={{ top: `${headerHeight}px` }}
+                    style={{ top: `calc(52px + ${headerHeight}px)` }}
                   >
-                    <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
+                    <span
+                      className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
                       {fullDayName} — {monthDayDate}
                     </span>
                     <span className="text-[10px] text-amber-700 font-medium">
@@ -465,7 +497,10 @@ export default function AdminPage() {
                           className="border rounded-lg p-3 bg-white shadow-xs space-y-2"
                         >
                           <div className="flex justify-between items-center border-b pb-1.5 gap-2">
-                            <h3 className="font-serif text-base font-normal text-zinc-900">
+                            <h3
+                              className="text-base font-normal text-zinc-900"
+                              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                            >
                               {formatTime12Hr(lesson.start_time)} - {lesson.title}
                             </h3>
 
@@ -534,7 +569,12 @@ export default function AdminPage() {
         <div className="space-y-6 pt-2">
           {/* Add Recurring Session Form */}
           <div className="bg-zinc-100 p-4 rounded-lg border space-y-3">
-            <h3 className="font-bold text-sm text-zinc-800">Add Recurring Training Session</h3>
+            <h3
+              className="font-bold text-sm text-zinc-800"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Add Recurring Training Session
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <select
                 value={newMasterLesson.day_of_week}
@@ -572,7 +612,8 @@ export default function AdminPage() {
 
               <button
                 onClick={handleAddMasterLesson}
-                className="bg-black text-white text-sm font-medium rounded p-2 hover:bg-zinc-800 col-span-2 md:col-span-1"
+                className="bg-black text-[#e8b4b8] text-sm font-semibold rounded p-2 hover:bg-zinc-800 transition col-span-2 md:col-span-1"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
                 Add Session
               </button>
@@ -588,9 +629,12 @@ export default function AdminPage() {
                 <div key={dayName} className="space-y-2">
                   <div
                     className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm"
-                    style={{ top: `${headerHeight}px` }}
+                    style={{ top: `calc(52px + ${headerHeight}px)` }}
                   >
-                    <span className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">
+                    <span
+                      className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
                       {dayName}
                     </span>
                     <span className="text-[10px] text-amber-700 font-medium">
@@ -607,7 +651,12 @@ export default function AdminPage() {
                         <div key={lesson.id} className="border rounded-lg p-4 bg-white shadow-sm space-y-3">
                           <div className="flex justify-between items-center border-b pb-2">
                             <div>
-                              <h4 className="font-serif text-base font-normal">{formatTime12Hr(lesson.start_time)} - {lesson.title}</h4>
+                              <h4
+                                className="text-base font-normal text-zinc-900"
+                                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                              >
+                                {formatTime12Hr(lesson.start_time)} - {lesson.title}
+                              </h4>
                             </div>
                             <button
                               onClick={() => handleDeleteMasterLesson(lesson.id)}
@@ -663,19 +712,25 @@ export default function AdminPage() {
 
       {/* TAB 3: SETTINGS */}
       {activeTab === 'settings' && (
-        <div className="bg-white border rounded-lg p-6 max-w-md space-y-4 mt-2">
-          <h3 className="font-bold text-lg font-serif">Update Community Passcode</h3>
+        <div className="bg-white border rounded-lg p-6 max-w-md space-y-4 mt-2 shadow-xs">
+          <h3
+            className="font-bold text-lg text-zinc-900"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Update Community Passcode
+          </h3>
           <p className="text-xs text-zinc-600">This passcode allows riders/parents to unlock "Edit Mode" and book available slots.</p>
           <input
             type="text"
             placeholder="New Passcode (e.g., CBE2026)"
             value={newCommunityPasscode}
             onChange={(e) => setNewCommunityPasscode(e.target.value)}
-            className="w-full border rounded p-2 text-sm"
+            className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
           />
           <button
             onClick={handleChangePasscode}
-            className="bg-black text-white text-sm px-4 py-2 rounded hover:bg-zinc-800 font-medium"
+            className="bg-black text-[#e8b4b8] text-sm px-4 py-2 rounded hover:bg-zinc-800 font-semibold transition"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Update Passcode
           </button>
