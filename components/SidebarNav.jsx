@@ -27,12 +27,12 @@ export default function SidebarNav({ children }) {
         <div className="md:hidden sticky top-0 z-50 flex items-center justify-between bg-black text-white px-4 py-3 shadow-md h-[52px]">
           <Link href="/" className="flex items-center gap-2">
             <img
-              src="/dark%20logo%20square.png"
-              alt="Cherry Blossom Equestrian Logo"
+              src="/dark%20%20square.png"
+              alt="Cherry Blossom Equestrian "
               className="w-7 h-7 object-contain"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = '/logo.png';
+                e.currentTarget.src = '/dark logo.png';
               }}
             />
             <span
@@ -90,7 +90,7 @@ export default function SidebarNav({ children }) {
             <div className="space-y-2 border-b border-zinc-800/80 pb-5 text-center">
               <Link href="/" className="block">
                 <img
-                  src="/logo.png"
+                  src="/dark logo.png"
                   alt="Cherry Blossom Equestrian Logo"
                   className="w-44 h-auto mx-auto filter invert brightness-200"
                 />
