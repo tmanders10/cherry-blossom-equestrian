@@ -8,21 +8,17 @@ export default function AdminPage() {
   const [adminPasscode, setAdminPasscode] = useState('');
   const [activeTab, setActiveTab] = useState('active-weeks');
 
-  // Dynamic Header Height Measurement for Sticky Banner Calibration
   const headerRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
-  // Master Plan State
   const [masterLessons, setMasterLessons] = useState([]);
   const [newMasterLesson, setNewMasterLesson] = useState({ day_of_week: 1, start_time: '16:30', title: 'Group Lesson', max_capacity: 4 });
 
-  // Active Weeks State
   const [activeWeeks, setActiveWeeks] = useState([]);
   const [selectedActiveWeek, setSelectedActiveWeek] = useState(null);
   const [activeLessons, setActiveLessons] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Monday');
 
-  // One-Off Session State
   const [newOneOffLesson, setNewOneOffLesson] = useState({
     lesson_date: '',
     start_time: '16:30',
@@ -30,7 +26,6 @@ export default function AdminPage() {
     max_capacity: 4
   });
 
-  // Settings State
   const [newCommunityPasscode, setNewCommunityPasscode] = useState('');
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -49,7 +44,6 @@ export default function AdminPage() {
     if (savedAdmin) verifyAdminCode(savedAdmin, true);
   }, []);
 
-  // Dynamically measure the exact height of the top sticky controls block
   useEffect(() => {
     const updateHeaderHeight = () => {
       if (headerRef.current) {
@@ -60,7 +54,35 @@ export default function AdminPage() {
     updateHeaderHeight();
     window.addEventListener('resize', updateHeaderHeight);
     return () => window.removeEventListener('resize', updateHeaderHeight);
-  }, [activeTab, activeWeeks, selectedActiveWeek]);
+  }, [activeTab, activeWeeks, selectedActiveWeek, activeLessons, masterLessons]);
+
+  // Dynamic Scroll Observer to Highlight Active Day Jump Button on Scroll
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: `-${headerHeight + 60}px 0px -60% 0px`,
+      threshold: 0,
+    };
+
+    const handleIntersect = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const dayId = entry.target.id;
+          const dayName = dayId.replace('admin-day-section-', '').replace('master-day-section-', '');
+          const matchedDay = daysList.find(d => d.fullDay.toLowerCase() === dayName);
+          if (matchedDay) {
+            setSelectedDay(matchedDay.fullDay);
+          }
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    const dayElements = document.querySelectorAll('[id^="admin-day-section-"], [id^="master-day-section-"]');
+    dayElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [activeTab, activeLessons, masterLessons, headerHeight]);
 
   async function verifyAdminCode(codeToTest, silent = false) {
     const { data } = await supabase.rpc('verify_community_passcode', { passcode_input: codeToTest });
@@ -75,7 +97,6 @@ export default function AdminPage() {
     }
   }
 
-  // --- MASTER PLAN FUNCTIONS ---
   async function fetchMasterPlan() {
     const { data } = await supabase
       .from('master_lessons')
@@ -120,7 +141,6 @@ export default function AdminPage() {
     fetchMasterPlan();
   }
 
-  // --- ACTIVE WEEKS FUNCTIONS ---
   async function fetchActiveWeeks() {
     const { data } = await supabase
       .from('active_weeks')
@@ -196,7 +216,6 @@ export default function AdminPage() {
     fetchActiveLessons(selectedActiveWeek.id);
   }
 
-  // --- SETTINGS FUNCTIONS ---
   async function handleChangePasscode() {
     if (!newCommunityPasscode.trim()) return;
     const { error } = await supabase
@@ -223,7 +242,8 @@ export default function AdminPage() {
 
   function scrollToDay(dayName) {
     setSelectedDay(dayName);
-    const targetElement = document.getElementById(`admin-day-section-${dayName.toLowerCase()}`);
+    const prefix = activeTab === 'master-plan' ? 'master-day-section-' : 'admin-day-section-';
+    const targetElement = document.getElementById(`${prefix}${dayName.toLowerCase()}`);
     if (targetElement) {
       const mobileOffset = typeof window !== 'undefined' && window.innerWidth < 768 ? 52 : 0;
       const yOffset = -(headerHeight + mobileOffset + 10);
@@ -237,6 +257,10 @@ export default function AdminPage() {
       const d = new Date(lesson.lesson_date + 'T00:00:00');
       return d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
     })
+  );
+
+  const masterDaysSet = new Set(
+    masterLessons.map((lesson) => daysOfWeek[lesson.day_of_week - 1])
   );
 
   const groupedActiveLessons = activeLessons.reduce((acc, lesson) => {
@@ -314,7 +338,7 @@ export default function AdminPage() {
         {/* Navigation Tabs */}
         <div className="flex gap-2 border-b border-zinc-200 text-xs pb-1 bg-zinc-50 px-1 rounded">
           <button
-            onClick={() => setActiveTab('active-weeks')}
+            onClick={() => { setActiveTab('active-weeks'); setSelectedDay('Monday'); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition ${
               activeTab === 'active-weeks'
                 ? 'bg-black text-[#e8b4b8] font-bold'
@@ -325,7 +349,7 @@ export default function AdminPage() {
             <Calendar className="w-3.5 h-3.5" /> Lesson Maintenance
           </button>
           <button
-            onClick={() => setActiveTab('master-plan')}
+            onClick={() => { setActiveTab('master-plan'); setSelectedDay('Monday'); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition ${
               activeTab === 'master-plan'
                 ? 'bg-black text-[#e8b4b8] font-bold'
@@ -400,6 +424,33 @@ export default function AdminPage() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* MASTER TEMPLATE DAY JUMP BAR */}
+        {activeTab === 'master-plan' && (
+          <div className="flex justify-between gap-1 px-1">
+            {daysList.map((day) => {
+              const hasLessons = masterDaysSet.has(day.fullDay);
+              const isDaySelected = selectedDay === day.fullDay;
+
+              return (
+                <button
+                  key={day.label}
+                  disabled={!hasLessons}
+                  onClick={() => scrollToDay(day.fullDay)}
+                  className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
+                    !hasLessons
+                      ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60'
+                      : isDaySelected
+                      ? 'bg-black text-[#e8b4b8] border-black'
+                      : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
+                  }`}
+                >
+                  {day.label}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -626,7 +677,7 @@ export default function AdminPage() {
               const dayLessons = groupedMasterLessons[dayName];
 
               return (
-                <div key={dayName} className="space-y-2">
+                <div key={dayName} id={`master-day-section-${dayName.toLowerCase()}`} className="space-y-2">
                   <div
                     className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
                     style={{ '--header-height': `${headerHeight}px` }}
