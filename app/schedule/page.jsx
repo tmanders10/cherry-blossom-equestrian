@@ -1,18 +1,16 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock, Unlock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 export default function SchedulePage() {
+  const [isScheduleUnlocked, setIsScheduleUnlocked] = useState(false);
+  const [passcode, setPasscode] = useState('');
+
   const [activeWeeks, setActiveWeeks] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Monday');
-
-  // Edit Mode / Community Unlock State
-  const [isEditUnlocked, setIsEditUnlocked] = useState(false);
-  const [passcode, setPasscode] = useState('');
-  const [showPasscodeModal, setShowPasscodeModal] = useState(false);
 
   // Measured Header Container Height for Sticky Days Alignment
   const headerRef = useRef(null);
@@ -31,11 +29,12 @@ export default function SchedulePage() {
   useEffect(() => {
     const savedCode = localStorage.getItem('cbe_community_code');
     if (savedCode) verifyCommunityCode(savedCode, true);
-    fetchActiveWeeks();
   }, []);
 
   // Calculate sticky header offset dynamically
   useEffect(() => {
+    if (!isScheduleUnlocked) return;
+
     const updateHeaderHeight = () => {
       if (headerRef.current) {
         setHeaderHeight(headerRef.current.offsetHeight);
@@ -45,11 +44,11 @@ export default function SchedulePage() {
     updateHeaderHeight();
     window.addEventListener('resize', updateHeaderHeight);
     return () => window.removeEventListener('resize', updateHeaderHeight);
-  }, [selectedWeek, activeWeeks]);
+  }, [selectedWeek, activeWeeks, isScheduleUnlocked]);
 
-  // Dynamic Scroll Observer to Highlight Active Day Jump Button as User Scrolls
+  // Dynamic Scroll Observer to Highlight Active Day Jump Button on Scroll
   useEffect(() => {
-    if (lessons.length === 0) return;
+    if (!isScheduleUnlocked || lessons.length === 0) return;
 
     const observerOptions = {
       root: null,
@@ -75,7 +74,18 @@ export default function SchedulePage() {
     dayElements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [lessons, headerHeight]);
+  }, [lessons, headerHeight, isScheduleUnlocked]);
+
+  async function verifyCommunityCode(codeToTest, silent = false) {
+    const { data } = await supabase.rpc('verify_community_passcode', { passcode_input: codeToTest });
+    if (data === true) {
+      setIsScheduleUnlocked(true);
+      localStorage.setItem('cbe_community_code', codeToTest);
+      fetchActiveWeeks();
+    } else if (!silent) {
+      alert('Incorrect passcode.');
+    }
+  }
 
   async function fetchActiveWeeks() {
     const { data } = await supabase
@@ -103,23 +113,7 @@ export default function SchedulePage() {
     if (data) setLessons(data);
   }
 
-  async function verifyCommunityCode(codeToTest, silent = false) {
-    const { data } = await supabase.rpc('verify_community_passcode', { passcode_input: codeToTest });
-    if (data === true) {
-      setIsEditUnlocked(true);
-      localStorage.setItem('cbe_community_code', codeToTest);
-      setShowPasscodeModal(false);
-    } else if (!silent) {
-      alert('Incorrect passcode.');
-    }
-  }
-
   async function handleBookSlot(lessonId, slotIndex) {
-    if (!isEditUnlocked) {
-      setShowPasscodeModal(true);
-      return;
-    }
-
     const name = prompt('Enter Rider Name & Last Initial (e.g., Sofie H.):');
     if (!name) return;
 
@@ -138,11 +132,6 @@ export default function SchedulePage() {
   }
 
   async function handleCancelBooking(bookingId) {
-    if (!isEditUnlocked) {
-      setShowPasscodeModal(true);
-      return;
-    }
-
     if (!confirm('Cancel this booking?')) return;
 
     const { error } = await supabase.from('bookings').delete().eq('id', bookingId);
@@ -184,6 +173,39 @@ export default function SchedulePage() {
     return acc;
   }, {});
 
+  // Passcode Lock Gate (Identical to Admin Access Screen)
+  if (!isScheduleUnlocked) {
+    return (
+      <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg max-w-sm w-full p-6 space-y-4 shadow-xl text-zinc-900">
+          <div
+            className="flex items-center gap-2 text-zinc-900 font-bold text-xl"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            <Lock className="w-5 h-5 text-amber-600" />
+            Schedule & Booking Access
+          </div>
+          <p className="text-xs text-zinc-600">Enter community passcode to view training schedules and book slots.</p>
+          <input
+            type="password"
+            placeholder="Enter passcode"
+            value={passcode}
+            onChange={(e) => setPasscode(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && verifyCommunityCode(passcode)}
+            className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+          />
+          <button
+            onClick={() => verifyCommunityCode(passcode)}
+            className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Authenticate
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-3 md:p-6 space-y-4">
       {/* MEASURED STICKY HEADER CONTAINER */}
@@ -191,7 +213,7 @@ export default function SchedulePage() {
         ref={headerRef}
         className="sticky top-[52px] md:top-0 z-30 bg-white/95 backdrop-blur-xs pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2"
       >
-        {/* Top Branding Card */}
+        {/* Top Branding Card - No Unlock Button Needed */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
           <div>
             <h1
@@ -207,24 +229,12 @@ export default function SchedulePage() {
 
           <button
             onClick={() => {
-              if (isEditUnlocked) {
-                localStorage.removeItem('cbe_community_code');
-                setIsEditUnlocked(false);
-              } else {
-                setShowPasscodeModal(true);
-              }
+              localStorage.removeItem('cbe_community_code');
+              setIsScheduleUnlocked(false);
             }}
-            className="flex items-center gap-1.5 text-xs bg-zinc-800 px-3 py-1.5 rounded hover:bg-zinc-700 text-zinc-200 transition"
+            className="text-xs bg-zinc-800 px-2.5 py-1 rounded hover:bg-zinc-700 text-zinc-300 transition"
           >
-            {isEditUnlocked ? (
-              <>
-                <Unlock className="w-3.5 h-3.5 text-emerald-400" /> Lock Edit
-              </>
-            ) : (
-              <>
-                <Lock className="w-3.5 h-3.5 text-amber-400" /> Unlock Edit Mode
-              </>
-            )}
+            Lock
           </button>
         </div>
 
@@ -256,7 +266,7 @@ export default function SchedulePage() {
           })}
         </div>
 
-        {/* Day Quick Jump Navigation (Dynamic Active Day Highlight) */}
+        {/* Day Quick Jump Navigation */}
         <div className="flex justify-between gap-1">
           {daysList.map((day) => {
             const hasLessons = activeDaysSet.has(day.fullDay);
@@ -348,14 +358,12 @@ export default function SchedulePage() {
                               </span>
 
                               {booking ? (
-                                isEditUnlocked && (
-                                  <button
-                                    onClick={() => handleCancelBooking(booking.id)}
-                                    className="text-red-600 hover:text-red-800 text-[11px] font-medium"
-                                  >
-                                    Cancel
-                                  </button>
-                                )
+                                <button
+                                  onClick={() => handleCancelBooking(booking.id)}
+                                  className="text-red-600 hover:text-red-800 text-[11px] font-medium"
+                                >
+                                  Cancel
+                                </button>
                               ) : (
                                 <button
                                   onClick={() => handleBookSlot(lesson.id, slotNum)}
@@ -376,40 +384,6 @@ export default function SchedulePage() {
           );
         })}
       </div>
-
-      {/* PASSCODE MODAL */}
-      {showPasscodeModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4 shadow-xl">
-            <div className="flex items-center gap-2 text-zinc-900 font-bold text-lg" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              <Lock className="w-5 h-5 text-amber-600" /> Enter Passcode
-            </div>
-            <p className="text-xs text-zinc-600">Enter community passcode to unlock booking and cancellation controls.</p>
-            <input
-              type="password"
-              placeholder="Enter passcode"
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-              className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowPasscodeModal(false)}
-                className="px-3 py-1.5 text-xs border rounded text-zinc-600 hover:bg-zinc-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => verifyCommunityCode(passcode)}
-                className="px-3 py-1.5 text-xs bg-black text-[#e8b4b8] font-semibold rounded hover:bg-zinc-800"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-              >
-                Unlock
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
