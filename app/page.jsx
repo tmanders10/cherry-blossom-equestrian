@@ -30,8 +30,18 @@ export default function HomePage() {
 
       {/* Trainer Title */}
       <div className="text-center space-y-1">
-        <h2 className="text-xs uppercase font-serif tracking-widest text-zinc-500">Meet Our Head Trainer</h2>
-        <h3 className="text-2xl font-serif text-zinc-900 font-normal">Charity Durgin</h3>
+        <h2
+          className="text-xs uppercase tracking-widest text-[#e8b4b8] font-semibold"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Meet Our Head Trainer
+        </h2>
+        <h3
+          className="text-2xl text-zinc-900 font-normal"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Charity Durgin
+        </h3>
       </div>
 
       {/* Internal Tab Navigation */}
@@ -42,9 +52,10 @@ export default function HomePage() {
             onClick={() => setActiveTab(tab.id)}
             className={`px-3 py-1.5 text-xs font-medium rounded transition ${
               activeTab === tab.id
-                ? 'bg-black text-white shadow-xs'
+                ? 'bg-black text-[#e8b4b8] shadow-xs font-bold'
                 : 'text-zinc-600 hover:bg-zinc-100 hover:text-black'
             }`}
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             {tab.label}
           </button>
@@ -55,7 +66,12 @@ export default function HomePage() {
       <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-6 shadow-xs min-h-[300px]">
         {activeTab === 'tab-intro' && (
           <div className="space-y-3">
-            <h4 className="font-serif text-xl font-normal text-zinc-900">Welcome to Cherry Blossom Equestrian</h4>
+            <h4
+              className="text-xl font-normal text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Welcome to Cherry Blossom Equestrian
+            </h4>
             <p className="text-sm text-zinc-700 leading-relaxed">
               With more than 25 years of experience in the equestrian industry, Charity Durgin brings a lifetime of horsemanship, competitive success, program management, and a genuine passion for developing confident, educated horses and riders to Cherry Blossom Equestrian.
             </p>
@@ -67,7 +83,12 @@ export default function HomePage() {
 
         {activeTab === 'tab-industry' && (
           <div className="space-y-3">
-            <h4 className="font-serif text-xl font-normal text-zinc-900">A Lifetime in the Equestrian Industry</h4>
+            <h4
+              className="text-xl font-normal text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              A Lifetime in the Equestrian Industry
+            </h4>
             <p className="text-sm text-zinc-700 leading-relaxed">
               Charity began riding at age 13 and quickly immersed herself in every aspect of the equestrian world. Being homeschooled gave her the unique opportunity to spend extensive time in the barn from an early age, gaining invaluable hands-on experience with horses both on the ground and in the saddle.
             </p>
@@ -85,7 +106,12 @@ export default function HomePage() {
 
         {activeTab === 'tab-accomplishments' && (
           <div className="space-y-3">
-            <h4 className="font-serif text-xl font-normal text-zinc-900">Competitive Accomplishments</h4>
+            <h4
+              className="text-xl font-normal text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Competitive Accomplishments
+            </h4>
             <p className="text-sm text-zinc-700 leading-relaxed">
               Charity’s personal competitive accomplishments include championship honors at the Winter Equestrian Festival (WEF), along with numerous championships and class wins in the Adult Equitation and Adult Hunters on the rated circuit.
             </p>
@@ -97,9 +123,14 @@ export default function HomePage() {
 
         {activeTab === 'tab-developing' && (
           <div className="space-y-3">
-            <h4 className="font-serif text-xl font-normal text-zinc-900">Developing Horses & Riders</h4>
+            <h4
+              className="text-xl font-normal text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Developing Horses & Riders
+            </h4>
             <p className="text-sm text-zinc-700 leading-relaxed">
-              After returning to professional status, Charity transitioned back into professional riding, teaching, and program management at Falcon Ridge Stables. Over the following years, her responsibilities grew to include managing a large lesson and training program, riding and developing horses, and teaching riders of varying ages and experience levels.
+              After returning to professional status, Charity transitioned back into professional riding, teaching, and program management at Falcon Ridge Stables. Over the following years, her responsibilities grew to include managing a large lesson and training program, riding and developing horses, teaching riders of varying ages and experience levels.
             </p>
             <p className="text-sm text-zinc-700 leading-relaxed">
               Students from the program qualified for and competed at prestigious championships including USEF Pony Finals, USEF Junior Hunter Finals, Pennsylvania National Horse Show, Washington International Horse Show, Capital Challenge Horse Show, NHS and ASPCA Maclay Finals.
@@ -109,7 +140,12 @@ export default function HomePage() {
 
         {activeTab === 'tab-approach' && (
           <div className="space-y-3">
-            <h4 className="font-serif text-xl font-normal text-zinc-900">A Horse-First Approach</h4>
+            <h4
+              className="text-xl font-normal text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              A Horse-First Approach
+            </h4>
             <p className="text-sm text-zinc-700 leading-relaxed">
               Charity prides herself on being a light, soft, and sympathetic rider, and she carries that philosophy into every aspect of her training and coaching. Her first question when encountering a problem is often not simply “How do we correct this?” but “Why is this happening?”
             </p>
@@ -121,7 +157,12 @@ export default function HomePage() {
 
         {activeTab === 'tab-teaching' && (
           <div className="space-y-3">
-            <h4 className="font-serif text-xl font-normal text-zinc-900">Teaching Through Understanding</h4>
+            <h4
+              className="text-xl font-normal text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Teaching Through Understanding
+            </h4>
             <p className="text-sm text-zinc-700 leading-relaxed">
               A cornerstone of Charity’s teaching philosophy is the belief that mistakes are an essential part of becoming an educated and capable rider. Rather than simply telling a student that something was wrong, Charity turns those moments into teaching opportunities.
             </p>
@@ -133,11 +174,19 @@ export default function HomePage() {
 
         {activeTab === 'tab-next' && (
           <div className="space-y-3">
-            <h4 className="font-serif text-xl font-normal text-zinc-900">The Next Chapter</h4>
+            <h4
+              className="text-xl font-normal text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              The Next Chapter
+            </h4>
             <p className="text-sm text-zinc-700 leading-relaxed">
               After nearly two decades at Falcon Ridge Stables, Charity is excited to bring the experience, relationships, and lessons accumulated throughout her career into the next chapter with Cherry Blossom Equestrian.
             </p>
-            <div className="border-l-2 border-black pl-4 py-2 my-3 italic text-zinc-800 text-sm font-serif">
+            <div
+              className="border-l-2 border-black pl-4 py-2 my-3 italic text-zinc-800 text-sm"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
               "Put the horse first. Teach the rider the 'why.' Celebrate progress. Learn from mistakes. Never stop developing better horsemen."
             </div>
           </div>
