@@ -12,7 +12,6 @@ export default function SchedulePage() {
   const [lessons, setLessons] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Monday');
 
-  // Measured Header Container Height for Sticky Days Alignment
   const headerRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -31,7 +30,6 @@ export default function SchedulePage() {
     if (savedCode) verifyCommunityCode(savedCode, true);
   }, []);
 
-  // Calculate sticky header offset dynamically
   useEffect(() => {
     if (!isScheduleUnlocked) return;
 
@@ -46,7 +44,6 @@ export default function SchedulePage() {
     return () => window.removeEventListener('resize', updateHeaderHeight);
   }, [selectedWeek, activeWeeks, isScheduleUnlocked]);
 
-  // Dynamic Scroll Observer to Highlight Active Day Jump Button on Scroll
   useEffect(() => {
     if (!isScheduleUnlocked || lessons.length === 0) return;
 
@@ -127,7 +124,8 @@ export default function SchedulePage() {
     if (!error) {
       fetchLessons(selectedWeek.id);
     } else {
-      alert('Could not book slot. Please try again.');
+      console.error('Supabase booking error:', error);
+      alert(`Could not book slot: ${error.message || 'Unknown error'}`);
     }
   }
 
@@ -173,7 +171,6 @@ export default function SchedulePage() {
     return acc;
   }, {});
 
-  // Passcode Lock Gate (Identical to Admin Access Screen)
   if (!isScheduleUnlocked) {
     return (
       <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
@@ -213,7 +210,7 @@ export default function SchedulePage() {
         ref={headerRef}
         className="sticky top-[52px] md:top-0 z-30 bg-white/95 backdrop-blur-xs pt-2 pb-2 border-b border-zinc-200 shadow-xs space-y-2"
       >
-        {/* Top Branding Card - No Unlock Button Needed */}
+        {/* Top Branding Card */}
         <div className="flex justify-between items-center bg-black text-white p-3.5 rounded-lg shadow-md">
           <div>
             <h1
