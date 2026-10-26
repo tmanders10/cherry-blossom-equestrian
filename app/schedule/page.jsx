@@ -3,6 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Lock } from 'lucide-react';
 
+export const metadata = {
+  title: 'Lesson Schedule & Booking',
+};
+
 export default function SchedulePage() {
   const [isScheduleUnlocked, setIsScheduleUnlocked] = useState(false);
   const [passcode, setPasscode] = useState('');
