@@ -3,6 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Lock, Plus, Trash2, Calendar, Users, Key, UserPlus, X } from 'lucide-react';
 
+export const metadata = {
+  title: 'Admin Portal',
+};
+
 export default function AdminPage() {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
