@@ -12,7 +12,6 @@ export default function SchedulePage() {
   const [lessons, setLessons] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Monday');
 
-  // Measured Header Container Height for Sticky Days Alignment
   const headerRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -31,7 +30,6 @@ export default function SchedulePage() {
     if (savedCode) verifyCommunityCode(savedCode, true);
   }, []);
 
-  // Calculate sticky header offset dynamically
   useEffect(() => {
     if (!isScheduleUnlocked) return;
 
@@ -46,7 +44,6 @@ export default function SchedulePage() {
     return () => window.removeEventListener('resize', updateHeaderHeight);
   }, [selectedWeek, activeWeeks, isScheduleUnlocked]);
 
-  // Dynamic Scroll Observer to Highlight Active Day Jump Button on Scroll
   useEffect(() => {
     if (!isScheduleUnlocked || lessons.length === 0) return;
 
@@ -174,7 +171,6 @@ export default function SchedulePage() {
     return acc;
   }, {});
 
-  // Passcode Lock Gate
   if (!isScheduleUnlocked) {
     return (
       <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
