@@ -85,7 +85,7 @@ export default function AdminPage() {
   }, [activeTab, activeLessons, masterLessons, headerHeight]);
 
   async function verifyAdminCode(codeToTest, silent = false) {
-    const { data } = await supabase.rpc('verify_community_passcode', { passcode_input: codeToTest });
+    const { data } = await supabase.rpc('verify_admin_passcode', { passcode_input: codeToTest });
     if (data === true) {
       setIsAdminUnlocked(true);
       setAdminPasscode(codeToTest);
