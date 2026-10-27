@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock } from 'lucide-react';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function SchedulePage() {
   const [isScheduleUnlocked, setIsScheduleUnlocked] = useState(false);
   const [passcode, setPasscode] = useState('');
+  const [showPasscode, setShowPasscode] = useState(false);
 
   const [activeWeeks, setActiveWeeks] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState(null);
@@ -15,6 +16,7 @@ export default function SchedulePage() {
   const headerRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const daysList = [
     { label: 'M', fullDay: 'Monday' },
     { label: 'Tu', fullDay: 'Tuesday' },
@@ -71,6 +73,23 @@ export default function SchedulePage() {
     dayElements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
+  }, [lessons, headerHeight, isScheduleUnlocked]);
+
+  // Auto-scroll to current day of week on initial lesson load
+  useEffect(() => {
+    if (lessons.length > 0 && headerHeight > 0 && isScheduleUnlocked) {
+      const todayIndex = new Date().getDay();
+      const currentDayName = daysOfWeek[todayIndex === 0 ? 6 : todayIndex - 1];
+
+      const hasCurrentDayLessons = lessons.some((lesson) => {
+        const d = new Date(lesson.lesson_date + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }) === currentDayName;
+      });
+
+      if (hasCurrentDayLessons) {
+        scrollToDay(currentDayName);
+      }
+    }
   }, [lessons, headerHeight, isScheduleUnlocked]);
 
   async function verifyCommunityCode(codeToTest, silent = false) {
@@ -183,14 +202,23 @@ export default function SchedulePage() {
             Schedule & Booking Access
           </div>
           <p className="text-xs text-zinc-600">Enter community passcode to view training schedules and book slots.</p>
-          <input
-            type="password"
-            placeholder="Enter passcode"
-            value={passcode}
-            onChange={(e) => setPasscode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && verifyCommunityCode(passcode)}
-            className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-          />
+          <div className="relative">
+            <input
+              type={showPasscode ? 'text' : 'password'}
+              placeholder="Enter passcode"
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && verifyCommunityCode(passcode)}
+              className="w-full border rounded p-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPasscode(!showPasscode)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800"
+            >
+              {showPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
           <button
             onClick={() => verifyCommunityCode(passcode)}
             className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition"

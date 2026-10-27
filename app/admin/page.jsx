@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock, Plus, Trash2, Calendar, Users, Key, UserPlus, X } from 'lucide-react';
+import { Lock, Plus, Trash2, Calendar, Users, Key, UserPlus, X, Eye, EyeOff } from 'lucide-react';
 
 export default function AdminPage() {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
+  const [showAdminPasscode, setShowAdminPasscode] = useState(false);
   const [activeTab, setActiveTab] = useState('active-weeks');
 
   const headerRef = useRef(null);
@@ -27,6 +28,7 @@ export default function AdminPage() {
   });
 
   const [newCommunityPasscode, setNewCommunityPasscode] = useState('');
+  const [showNewCommunityPasscode, setShowNewCommunityPasscode] = useState(false);
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const daysList = [
@@ -83,6 +85,23 @@ export default function AdminPage() {
 
     return () => observer.disconnect();
   }, [activeTab, activeLessons, masterLessons, headerHeight]);
+
+  // Auto-scroll to current day of week on initial lesson load
+  useEffect(() => {
+    if (activeLessons.length > 0 && headerHeight > 0) {
+      const todayIndex = new Date().getDay();
+      const currentDayName = daysOfWeek[todayIndex === 0 ? 6 : todayIndex - 1];
+      
+      const hasCurrentDayLessons = activeLessons.some((lesson) => {
+        const d = new Date(lesson.lesson_date + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }) === currentDayName;
+      });
+
+      if (hasCurrentDayLessons) {
+        scrollToDay(currentDayName);
+      }
+    }
+  }, [activeLessons, headerHeight]);
 
   async function verifyAdminCode(codeToTest, silent = false) {
     const { data } = await supabase.rpc('verify_admin_passcode', { passcode_input: codeToTest });
@@ -288,14 +307,23 @@ export default function AdminPage() {
             Admin Portal Access
           </div>
           <p className="text-xs text-zinc-600">Enter passcode to manage Master Schedule and Active Weeks.</p>
-          <input
-            type="password"
-            placeholder="Enter passcode"
-            value={adminPasscode}
-            onChange={(e) => setAdminPasscode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && verifyAdminCode(adminPasscode)}
-            className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-          />
+          <div className="relative">
+            <input
+              type={showAdminPasscode ? 'text' : 'password'}
+              placeholder="Enter passcode"
+              value={adminPasscode}
+              onChange={(e) => setAdminPasscode(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && verifyAdminCode(adminPasscode)}
+              className="w-full border rounded p-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+            />
+            <button
+              type="button"
+              onClick={() => setShowAdminPasscode(!showAdminPasscode)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800"
+            >
+              {showAdminPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
           <button
             onClick={() => verifyAdminCode(adminPasscode)}
             className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition"
@@ -772,13 +800,22 @@ export default function AdminPage() {
             Update Community Passcode
           </h3>
           <p className="text-xs text-zinc-600">This passcode allows riders/parents to unlock "Edit Mode" and book available slots.</p>
-          <input
-            type="text"
-            placeholder="New Passcode (e.g., CBE2026)"
-            value={newCommunityPasscode}
-            onChange={(e) => setNewCommunityPasscode(e.target.value)}
-            className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-          />
+          <div className="relative">
+            <input
+              type={showNewCommunityPasscode ? 'text' : 'password'}
+              placeholder="New Passcode (e.g., CBE2026)"
+              value={newCommunityPasscode}
+              onChange={(e) => setNewCommunityPasscode(e.target.value)}
+              className="w-full border rounded p-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewCommunityPasscode(!showNewCommunityPasscode)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800"
+            >
+              {showNewCommunityPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
           <button
             onClick={handleChangePasscode}
             className="bg-black text-[#e8b4b8] text-sm px-4 py-2 rounded hover:bg-zinc-800 font-semibold transition"
