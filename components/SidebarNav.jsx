@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Info, Calendar, Lock, Menu, X } from 'lucide-react';
+import EnvironmentBanner from './EnvironmentBanner';
 
 export default function SidebarNav({ isOpen, setIsOpen }) {
   const pathname = usePathname();
@@ -15,7 +16,9 @@ export default function SidebarNav({ isOpen, setIsOpen }) {
   return (
     <>
       {/* Mobile / Small Viewport Top Sticky Bar */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-black text-white px-4 py-2.5 flex items-center justify-between border-b border-zinc-800 shadow-md h-[52px]">
+      <header className="md:hidden sticky top-0 left-0 right-0 z-40 bg-black text-white flex flex-col border-b border-zinc-800 shadow-md">
+        <EnvironmentBanner />
+        <div className="px-4 py-2.5 flex items-center justify-between h-[52px]">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -31,11 +34,12 @@ export default function SidebarNav({ isOpen, setIsOpen }) {
             Cherry Blossom Equestrian
           </span>
         </div>
-        <img
-          src="/logo.png"
-          alt="CBE Logo"
-          className="w-7 h-auto"
-        />
+          <img
+            src="/logo.png"
+            alt="CBE Logo"
+            className="w-7 h-auto"
+          />
+        </div>
       </header>
 
       {/* Backdrop overlay for mobile when drawer is open */}

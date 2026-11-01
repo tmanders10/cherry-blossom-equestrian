@@ -130,7 +130,7 @@ export default function SchedulePage() {
   }
 
   async function handleBookSlot(lessonId, slotIndex) {
-    const name = prompt('Enter Rider Name & Last Initial (e.g., Sofie H.):');
+    const name = prompt('Enter rider name & last initial:');
     if (!name) return;
 
     const { error } = await supabase.from('bookings').insert([{
