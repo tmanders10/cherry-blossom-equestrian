@@ -11,4 +11,4 @@ coverage/
 .aistudio/
 public/assets/
 metadata.json
-
+*.original.*
