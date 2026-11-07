@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Info, Award, Calendar, Lock, Menu, X } from 'lucide-react';
+import { Info, Award, Calendar, Lock, Menu, X, Phone, Mail } from 'lucide-react';
 import EnvironmentBanner from './EnvironmentBanner';
 
 export default function SidebarNav({ isOpen, setIsOpen }) {
@@ -113,8 +113,30 @@ export default function SidebarNav({ isOpen, setIsOpen }) {
           </nav>
         </div>
 
+        {/* Contact Block in Sidebar */}
+        <div className="border-t border-zinc-800 pt-4 pb-3 space-y-2">
+          <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest px-1">
+            Contact Charity
+          </div>
+          <a
+            href="tel:7702492205"
+            className="flex items-center gap-2 text-xs text-zinc-300 hover:text-[#e8b4b8] transition px-1 group"
+          >
+            <Phone className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#e8b4b8] shrink-0" />
+            <span className="font-medium">(770) 249-2205</span>
+          </a>
+          <a
+            href="mailto:trainer@cherryblossomequestrian.com"
+            className="flex items-center gap-2 text-[11px] text-zinc-300 hover:text-[#e8b4b8] transition px-1 group truncate"
+            title="trainer@cherryblossomequestrian.com"
+          >
+            <Mail className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#e8b4b8] shrink-0" />
+            <span className="font-medium truncate">trainer@cherryblossomequestrian.com</span>
+          </a>
+        </div>
+
         {/* Footer */}
-        <div className="text-[10px] text-zinc-500 text-center border-t border-zinc-800 pt-4 uppercase tracking-widest">
+        <div className="text-[10px] text-zinc-500 text-center border-t border-zinc-800 pt-3 uppercase tracking-widest">
           &copy; Cherry Blossom Equestrian
         </div>
       </aside>

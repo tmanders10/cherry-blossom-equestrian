@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Award, BookOpen, Compass, Heart, Sparkles, Trophy, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Award, BookOpen, Compass, Heart, Sparkles, Trophy, CheckCircle2, ChevronDown, ChevronUp, Phone, Mail } from 'lucide-react';
 
 export default function TrainerBioPage() {
   const [expandedSections, setExpandedSections] = useState({
@@ -91,6 +91,24 @@ export default function TrainerBioPage() {
           >
             "Put the horse first. Teach the rider the 'why.' Celebrate progress. Learn from mistakes. Never stop developing better horsemen."
           </div>
+        </div>
+
+        {/* Quick Contact Badges */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <a
+            href="tel:7702492205"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800/90 hover:bg-zinc-700/90 border border-zinc-700/70 text-xs font-semibold text-zinc-100 transition shadow-2xs group"
+          >
+            <Phone className="w-3.5 h-3.5 text-[#e8b4b8]" />
+            <span>(770) 249-2205</span>
+          </a>
+          <a
+            href="mailto:trainer@cherryblossomequestrian.com"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800/90 hover:bg-zinc-700/90 border border-zinc-700/70 text-xs font-semibold text-zinc-100 transition shadow-2xs group"
+          >
+            <Mail className="w-3.5 h-3.5 text-[#e8b4b8]" />
+            <span>trainer@cherryblossomequestrian.com</span>
+          </a>
         </div>
       </header>
 
@@ -393,7 +411,7 @@ export default function TrainerBioPage() {
       </div>
 
       {/* Program Inquiry Footer */}
-      <footer className="bg-zinc-900 text-white rounded-2xl p-6 md:p-8 text-center space-y-3 shadow-md border border-zinc-800">
+      <footer className="bg-zinc-900 text-white rounded-2xl p-6 md:p-8 text-center space-y-4 shadow-md border border-zinc-800">
         <h3
           className="text-xl md:text-2xl text-white font-normal"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
@@ -403,6 +421,22 @@ export default function TrainerBioPage() {
         <p className="text-xs md:text-sm text-zinc-300 max-w-md mx-auto leading-relaxed">
           For lesson program inquiries, evaluation sessions, or training questions, reach out directly to learn more about joining our barn.
         </p>
+        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          <a
+            href="tel:7702492205"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/80 rounded-lg text-xs font-semibold text-white transition shadow-xs group"
+          >
+            <Phone className="w-3.5 h-3.5 text-[#e8b4b8]" />
+            <span>(770) 249-2205</span>
+          </a>
+          <a
+            href="mailto:trainer@cherryblossomequestrian.com"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/80 rounded-lg text-xs font-semibold text-white transition shadow-xs group"
+          >
+            <Mail className="w-3.5 h-3.5 text-[#e8b4b8]" />
+            <span>trainer@cherryblossomequestrian.com</span>
+          </a>
+        </div>
       </footer>
     </div>
   );

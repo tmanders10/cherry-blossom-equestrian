@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock, Eye, EyeOff, Plus, X, AlertCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, Plus, X, AlertCircle, Phone, Mail } from 'lucide-react';
 
 export default function SchedulePage() {
   const [isScheduleUnlocked, setIsScheduleUnlocked] = useState(false);
@@ -267,6 +267,29 @@ export default function SchedulePage() {
           >
             Authenticate
           </button>
+
+          <div className="pt-2 border-t border-zinc-100 text-center space-y-1.5">
+            <p className="text-[11px] text-zinc-500">
+              New to Cherry Blossom Equestrian? Contact Charity directly:
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs pt-0.5">
+              <a
+                href="tel:7702492205"
+                className="inline-flex items-center gap-1 font-semibold text-zinc-800 hover:text-black hover:underline"
+              >
+                <Phone className="w-3 h-3 text-zinc-500" />
+                <span>(770) 249-2205</span>
+              </a>
+              <span className="hidden sm:inline text-zinc-300">•</span>
+              <a
+                href="mailto:trainer@cherryblossomequestrian.com"
+                className="inline-flex items-center gap-1 font-semibold text-zinc-800 hover:text-black hover:underline"
+              >
+                <Mail className="w-3 h-3 text-zinc-500" />
+                <span>Email Charity</span>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     );

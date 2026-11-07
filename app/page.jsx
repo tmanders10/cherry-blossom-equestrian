@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Award, ChevronRight, MapPin, Heart, Shield, Sparkles } from 'lucide-react';
+import { Award, ChevronRight, MapPin, Heart, Shield, Sparkles, Phone, Mail } from 'lucide-react';
 
 export default function AboutUsPage() {
   return (
@@ -184,20 +184,61 @@ export default function AboutUsPage() {
       </section>
 
       {/* Location & Inquiries Section */}
-      <footer className="bg-zinc-50 border border-zinc-200 rounded-xl p-6 text-center space-y-3">
-        <a
-          href="https://maps.google.com/?q=13355+Arnold+Mill+Rd,+Roswell,+GA+30075"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-zinc-200 hover:border-zinc-400 rounded-full text-xs font-semibold text-zinc-900 shadow-2xs transition hover:shadow-xs cursor-pointer group"
-          title="Open location in Google Maps"
-        >
-          <MapPin className="w-3.5 h-3.5 text-zinc-900 group-hover:text-[#e8b4b8] transition shrink-0" />
-          <span>13355 Arnold Mill Rd, Roswell, GA 30075</span>
-        </a>
-        <p className="text-xs text-zinc-600 max-w-md mx-auto leading-relaxed">
-          Conveniently located for equestrian families in Roswell, Alpharetta, Milton, Canton, Woodstock, and surrounding communities. For lesson program inquiries, evaluation sessions, or training, please reach out to Charity.
+      <footer className="bg-zinc-50 border border-zinc-200 rounded-xl p-6 md:p-8 text-center space-y-4 shadow-2xs">
+        <div className="space-y-1">
+          <span
+            className="text-[11px] uppercase tracking-widest text-zinc-500 font-semibold block"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Location & Contact
+          </span>
+          <h3
+            className="text-xl md:text-2xl text-zinc-900 font-normal"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Connect with Cherry Blossom Equestrian
+          </h3>
+          <p className="text-xs text-zinc-600 max-w-md mx-auto leading-relaxed pt-0.5">
+            Conveniently located for equestrian families in Roswell, Alpharetta, Milton, Canton, Woodstock, and surrounding North Metro Atlanta communities.
+          </p>
+        </div>
+
+        {/* Contact Badges: Phone, Email, Location */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          <a
+            href="tel:7702492205"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-zinc-200 hover:border-zinc-400 rounded-lg text-xs font-semibold text-zinc-900 shadow-2xs transition hover:shadow-xs group cursor-pointer"
+            title="Call Charity Durgin"
+          >
+            <Phone className="w-3.5 h-3.5 text-zinc-700 group-hover:text-[#e8b4b8] transition shrink-0" />
+            <span>(770) 249-2205</span>
+          </a>
+
+          <a
+            href="mailto:trainer@cherryblossomequestrian.com"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-zinc-200 hover:border-zinc-400 rounded-lg text-xs font-semibold text-zinc-900 shadow-2xs transition hover:shadow-xs group cursor-pointer"
+            title="Email Charity Durgin"
+          >
+            <Mail className="w-3.5 h-3.5 text-zinc-700 group-hover:text-[#e8b4b8] transition shrink-0" />
+            <span>trainer@cherryblossomequestrian.com</span>
+          </a>
+
+          <a
+            href="https://maps.google.com/?q=13355+Arnold+Mill+Rd,+Roswell,+GA+30075"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-zinc-200 hover:border-zinc-400 rounded-lg text-xs font-semibold text-zinc-900 shadow-2xs transition hover:shadow-xs group cursor-pointer"
+            title="Open location in Google Maps"
+          >
+            <MapPin className="w-3.5 h-3.5 text-zinc-700 group-hover:text-[#e8b4b8] transition shrink-0" />
+            <span>13355 Arnold Mill Rd, Roswell, GA 30075</span>
+          </a>
+        </div>
+
+        <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+          For lesson program inquiries, evaluation sessions, or training questions, please call or email Charity directly.
         </p>
+
         <div className="pt-2 flex flex-wrap justify-center gap-3">
           <Link
             href="/trainer"
