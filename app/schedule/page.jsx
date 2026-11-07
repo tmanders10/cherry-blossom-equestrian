@@ -1,12 +1,21 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock, Eye, EyeOff, Plus } from 'lucide-react';
+import { Lock, Eye, EyeOff, Plus, X, AlertCircle } from 'lucide-react';
 
 export default function SchedulePage() {
   const [isScheduleUnlocked, setIsScheduleUnlocked] = useState(false);
   const [passcode, setPasscode] = useState('');
   const [showPasscode, setShowPasscode] = useState(false);
+  const [passcodeError, setPasscodeError] = useState(false);
+
+  const [bookingModal, setBookingModal] = useState(null); // { lessonId, slotIndex, title, time }
+  const [riderNameInput, setRiderNameInput] = useState('');
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+  const [bookingError, setBookingError] = useState(null);
+
+  const [cancelModal, setCancelModal] = useState(null); // { bookingId, clientName }
+  const [isCanceling, setIsCanceling] = useState(false);
 
   const [activeWeeks, setActiveWeeks] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState(null);
@@ -93,13 +102,14 @@ export default function SchedulePage() {
   }, [lessons, headerHeight, isScheduleUnlocked]);
 
   async function verifyCommunityCode(codeToTest, silent = false) {
+    setPasscodeError(false);
     const { data } = await supabase.rpc('verify_community_passcode', { passcode_input: codeToTest });
     if (data === true) {
       setIsScheduleUnlocked(true);
       localStorage.setItem('cbe_community_code', codeToTest);
       fetchActiveWeeks();
     } else if (!silent) {
-      alert('Incorrect passcode.');
+      setPasscodeError(true);
     }
   }
 
@@ -129,31 +139,59 @@ export default function SchedulePage() {
     if (data) setLessons(data);
   }
 
-  async function handleBookSlot(lessonId, slotIndex) {
-    const name = prompt('Enter rider name & last initial:');
-    if (!name) return;
+  function openBookModal(lesson, slotIndex) {
+    setBookingModal({
+      lessonId: lesson.id,
+      slotIndex: slotIndex,
+      title: lesson.title,
+      time: formatTime12Hr(lesson.start_time),
+      lessonDate: lesson.lesson_date,
+    });
+    setRiderNameInput('');
+    setBookingError(null);
+  }
+
+  async function submitBooking() {
+    if (!bookingModal || !riderNameInput.trim()) return;
+    setIsSubmittingBooking(true);
+    setBookingError(null);
 
     const { error } = await supabase.from('bookings').insert([{
-      active_lesson_id: lessonId,
-      slot_index: slotIndex,
-      client_name: name.trim(),
+      active_lesson_id: bookingModal.lessonId,
+      slot_index: bookingModal.slotIndex,
+      client_name: riderNameInput.trim(),
       is_regular: false
     }]);
 
+    setIsSubmittingBooking(false);
+
     if (!error) {
-      fetchLessons(selectedWeek.id);
+      setBookingModal(null);
+      setRiderNameInput('');
+      if (selectedWeek) fetchLessons(selectedWeek.id);
     } else {
       console.error('Supabase booking error:', error);
-      alert(`Could not book slot: ${error.message || 'Unknown error'}`);
+      setBookingError(error.message || 'Could not complete booking.');
     }
   }
 
-  async function handleCancelBooking(bookingId) {
-    if (!confirm('Cancel this booking?')) return;
+  function openCancelModal(booking) {
+    setCancelModal({
+      bookingId: booking.id,
+      clientName: booking.client_name,
+    });
+  }
 
-    const { error } = await supabase.from('bookings').delete().eq('id', bookingId);
+  async function confirmCancelBooking() {
+    if (!cancelModal) return;
+    setIsCanceling(true);
+
+    const { error } = await supabase.from('bookings').delete().eq('id', cancelModal.bookingId);
+    setIsCanceling(false);
+
     if (!error) {
-      fetchLessons(selectedWeek.id);
+      setCancelModal(null);
+      if (selectedWeek) fetchLessons(selectedWeek.id);
     }
   }
 
@@ -219,9 +257,12 @@ export default function SchedulePage() {
               {showPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {passcodeError && (
+            <p className="text-xs text-red-600 font-medium">Incorrect passcode. Please try again.</p>
+          )}
           <button
             onClick={() => verifyCommunityCode(passcode)}
-            className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition"
+            className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition cursor-pointer"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Authenticate
@@ -384,14 +425,16 @@ export default function SchedulePage() {
 
                               {booking ? (
                                 <button
-                                  onClick={() => handleCancelBooking(booking.id)}
-                                  className="text-red-600 hover:text-red-800 text-[11px] font-medium"
+                                  type="button"
+                                  onClick={() => openCancelModal(booking)}
+                                  className="text-red-600 hover:text-red-800 text-[11px] font-medium cursor-pointer"
                                 >
                                   Cancel
                                 </button>
                               ) : (
                                 <button
-                                  onClick={() => handleBookSlot(lesson.id, slotNum)}
+                                  type="button"
+                                  onClick={() => openBookModal(lesson, slotNum)}
                                   className="text-zinc-700 hover:text-black font-semibold text-[11px] flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded border border-zinc-200 transition cursor-pointer"
                                 >
                                   <Plus className="w-3 h-3" /> Book
@@ -409,6 +452,124 @@ export default function SchedulePage() {
           );
         })}
       </div>
+
+      {/* IN-APP BOOKING MODAL */}
+      {bookingModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-zinc-200">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3
+                  className="font-bold text-base text-zinc-900"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Book Lesson Slot
+                </h3>
+                <p className="text-[11px] text-zinc-500 mt-0.5">
+                  {bookingModal.time} • {bookingModal.title} (Slot {bookingModal.slotIndex})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setBookingModal(null);
+                  setRiderNameInput('');
+                  setBookingError(null);
+                }}
+                className="text-zinc-400 hover:text-black p-1 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">
+                  Rider Name & Last Initial:
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="e.g. Charlotte H."
+                  value={riderNameInput}
+                  onChange={(e) => {
+                    setRiderNameInput(e.target.value);
+                    setBookingError(null);
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && submitBooking()}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+
+              {bookingError && (
+                <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2 flex items-start gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{bookingError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBookingModal(null);
+                    setRiderNameInput('');
+                    setBookingError(null);
+                  }}
+                  className="px-3.5 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 rounded-lg transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!riderNameInput.trim() || isSubmittingBooking}
+                  onClick={submitBooking}
+                  className="px-4 py-2 bg-black hover:bg-zinc-800 disabled:opacity-50 text-[#e8b4b8] rounded-lg text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  {isSubmittingBooking ? 'Booking...' : 'Confirm Booking'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP CANCEL BOOKING CONFIRMATION MODAL */}
+      {cancelModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-zinc-200">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900">Cancel Booking?</h3>
+                <p className="text-xs text-zinc-600 mt-1">
+                  Are you sure you want to cancel the booking for <strong className="text-zinc-900">{cancelModal.clientName}</strong>?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+              <button
+                type="button"
+                onClick={() => setCancelModal(null)}
+                className="px-3.5 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 rounded-lg transition cursor-pointer"
+              >
+                Keep Booking
+              </button>
+              <button
+                type="button"
+                disabled={isCanceling}
+                onClick={confirmCancelBooking}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                {isCanceling ? 'Canceling...' : 'Yes, Cancel Booking'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

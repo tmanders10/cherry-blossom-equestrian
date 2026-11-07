@@ -42,6 +42,15 @@ export default function AdminPage() {
   const [copiedRider, setCopiedRider] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
+  const [assignModal, setAssignModal] = useState(null); // { type: 'active' | 'master', lessonId, slotIndex, title, time, subtitle }
+  const [assignRiderName, setAssignRiderName] = useState('');
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [assignError, setAssignError] = useState(null);
+
+  const [confirmModal, setConfirmModal] = useState(null); // { title, message, confirmText, isDanger, onConfirm }
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [adminPasscodeError, setAdminPasscodeError] = useState(false);
+
 
 
   const [newOneOffLesson, setNewOneOffLesson] = useState({
@@ -148,6 +157,7 @@ export default function AdminPage() {
 
 
   async function verifyAdminCode(codeToTest, silent = false) {
+    setAdminPasscodeError(false);
     const { data } = await supabase.rpc('verify_admin_passcode', { passcode_input: codeToTest });
     if (data === true) {
       setIsAdminUnlocked(true);
@@ -157,7 +167,7 @@ export default function AdminPage() {
       fetchActiveWeeks();
       fetchArchivedWeeks();
     } else if (!silent) {
-      alert('Incorrect passcode.');
+      setAdminPasscodeError(true);
     }
   }
 
@@ -178,32 +188,34 @@ export default function AdminPage() {
       setIsMasterModalOpen(false);
       setNewMasterLesson({ day_of_week: 1, start_time: '16:30', title: 'Group Lesson', max_capacity: 4 });
     } else {
-      alert('Error adding master training session: ' + (error.message || ''));
+      console.error('Error adding master training session:', error);
     }
   }
 
-  async function handleDeleteMasterLesson(id) {
-    if (!confirm('Delete this recurring training session?')) return;
-    await supabase.from('master_lessons').delete().eq('id', id);
-    fetchMasterPlan();
+  function requestDeleteMasterLesson(id, title) {
+    openConfirmModal(
+      'Delete Recurring Session?',
+      `Are you sure you want to permanently delete this recurring "${title || 'session'}" from the Master Template?`,
+      'Yes, Delete Session',
+      true,
+      async () => {
+        await supabase.from('master_lessons').delete().eq('id', id);
+        fetchMasterPlan();
+      }
+    );
   }
 
-  async function handleAddMasterRegular(masterLessonId, slotIndex) {
-    const name = prompt('Enter regular rider name & last initial:');
-    if (!name) return;
-
-    await supabase.from('master_regulars').insert([{
-      master_lesson_id: masterLessonId,
-      slot_index: slotIndex,
-      client_name: name.trim()
-    }]);
-    fetchMasterPlan();
-  }
-
-  async function handleRemoveMasterRegular(regularId) {
-    if (!confirm('Remove regular rider from this master slot?')) return;
-    await supabase.from('master_regulars').delete().eq('id', regularId);
-    fetchMasterPlan();
+  function requestRemoveMasterRegular(regularId, clientName) {
+    openConfirmModal(
+      'Remove Regular Rider?',
+      `Are you sure you want to remove ${clientName ? `"${clientName}"` : 'this regular rider'} from this recurring master slot?`,
+      'Remove Regular',
+      true,
+      async () => {
+        await supabase.from('master_regulars').delete().eq('id', regularId);
+        fetchMasterPlan();
+      }
+    );
   }
 
   async function fetchActiveWeeks() {
@@ -553,37 +565,109 @@ export default function AdminPage() {
       await fetchActiveLessons(selectedActiveWeek.id);
       setIsOneOffModalOpen(false);
     } else {
-      alert('Error adding one-off session: ' + (error.message || ''));
+      console.error('Error adding one-off session:', error);
     }
   }
 
-  async function handleDeleteActiveLesson(lessonId) {
-    if (!confirm('Delete this training session from the active week schedule?')) return;
-    await supabase.from('active_lessons').delete().eq('id', lessonId);
-    fetchActiveLessons(selectedActiveWeek.id);
+  function requestDeleteActiveLesson(lessonId, title) {
+    openConfirmModal(
+      'Delete Session?',
+      `Are you sure you want to delete this "${title || 'session'}" from the active week schedule?`,
+      'Yes, Delete Session',
+      true,
+      async () => {
+        await supabase.from('active_lessons').delete().eq('id', lessonId);
+        if (selectedActiveWeek) fetchActiveLessons(selectedActiveWeek.id);
+      }
+    );
   }
 
   async function handleUpdateAdminNote(lessonId, note) {
     await supabase.from('active_lessons').update({ admin_note: note }).eq('id', lessonId);
-    fetchActiveLessons(selectedActiveWeek.id);
+    if (selectedActiveWeek) fetchActiveLessons(selectedActiveWeek.id);
   }
 
-  async function handleAdminRemoveBooking(bookingId) {
-    if (!confirm('Remove student from this slot?')) return;
-    await supabase.from('bookings').delete().eq('id', bookingId);
-    fetchActiveLessons(selectedActiveWeek.id);
+  function requestAdminRemoveBooking(bookingId, clientName) {
+    openConfirmModal(
+      'Remove Rider?',
+      `Are you sure you want to remove ${clientName ? `"${clientName}"` : 'this rider'} from this session slot?`,
+      'Remove Rider',
+      true,
+      async () => {
+        await supabase.from('bookings').delete().eq('id', bookingId);
+        if (selectedActiveWeek) fetchActiveLessons(selectedActiveWeek.id);
+      }
+    );
   }
 
-  async function handleAdminAddBooking(lessonId, slotIndex) {
-    const name = prompt('Enter rider name & last initial:');
-    if (!name) return;
-    await supabase.from('bookings').insert([{
-      active_lesson_id: lessonId,
-      slot_index: slotIndex,
-      client_name: name.trim(),
-      is_regular: false
-    }]);
-    fetchActiveLessons(selectedActiveWeek.id);
+  function openAssignModal(type, lessonId, slotIndex, title, time, subtitle) {
+    setAssignModal({
+      type,
+      lessonId,
+      slotIndex,
+      title,
+      time,
+      subtitle,
+    });
+    setAssignRiderName('');
+    setAssignError(null);
+  }
+
+  async function submitAssignModal() {
+    if (!assignModal || !assignRiderName.trim()) return;
+    setIsAssigning(true);
+    setAssignError(null);
+
+    try {
+      if (assignModal.type === 'master') {
+        const { error } = await supabase.from('master_regulars').insert([{
+          master_lesson_id: assignModal.lessonId,
+          slot_index: assignModal.slotIndex,
+          client_name: assignRiderName.trim()
+        }]);
+        if (error) throw error;
+        await fetchMasterPlan();
+      } else {
+        const { error } = await supabase.from('bookings').insert([{
+          active_lesson_id: assignModal.lessonId,
+          slot_index: assignModal.slotIndex,
+          client_name: assignRiderName.trim(),
+          is_regular: false
+        }]);
+        if (error) throw error;
+        if (selectedActiveWeek) await fetchActiveLessons(selectedActiveWeek.id);
+      }
+      setAssignModal(null);
+      setAssignRiderName('');
+    } catch (err) {
+      console.error('Assign error:', err);
+      setAssignError(err.message || 'Could not assign rider.');
+    } finally {
+      setIsAssigning(false);
+    }
+  }
+
+  function openConfirmModal(title, message, confirmText, isDanger, onConfirm) {
+    setConfirmModal({
+      title,
+      message,
+      confirmText: confirmText || 'Confirm',
+      isDanger: isDanger !== false,
+      onConfirm,
+    });
+  }
+
+  async function executeConfirmModal() {
+    if (!confirmModal || !confirmModal.onConfirm) return;
+    setIsConfirming(true);
+    try {
+      await confirmModal.onConfirm();
+      setConfirmModal(null);
+    } catch (err) {
+      console.error('Confirm action error:', err);
+    } finally {
+      setIsConfirming(false);
+    }
   }
 
   async function handleChangePasscode() {
@@ -594,10 +678,9 @@ export default function AdminPage() {
       .eq('key', 'community_passcode');
 
     if (!error) {
-      alert('Community Passcode updated successfully!');
       setNewCommunityPasscode('');
     } else {
-      alert('Error updating passcode');
+      console.error('Error updating passcode:', error);
     }
   }
 
@@ -796,9 +879,12 @@ export default function AdminPage() {
               {showAdminPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+          {adminPasscodeError && (
+            <p className="text-xs text-red-600 font-medium">Incorrect passcode. Please try again.</p>
+          )}
           <button
             onClick={() => verifyAdminCode(adminPasscode)}
-            className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition"
+            className="w-full bg-black text-[#e8b4b8] py-2 rounded text-sm font-medium hover:bg-zinc-800 transition cursor-pointer"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             Authenticate Admin
@@ -1232,7 +1318,7 @@ export default function AdminPage() {
                                         <option value="excused">○ Excused</option>
                                       </select>
                                       <button
-                                        onClick={() => handleAdminRemoveBooking(booking.id)}
+                                        onClick={() => requestAdminRemoveBooking(booking.id, booking.client_name)}
                                         className="text-red-500 hover:text-red-700 p-0.5"
                                         title="Remove student"
                                       >
@@ -1241,7 +1327,7 @@ export default function AdminPage() {
                                     </div>
                                   ) : (
                                     <button
-                                      onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
+                                      onClick={() => openAssignModal('active', lesson.id, slotNum, lesson.title, formatTime12Hr(lesson.start_time), `${fullDayName} — ${monthDayDate}`)}
                                       className="text-zinc-700 hover:text-black font-semibold text-[11px] flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded border border-zinc-200 transition shrink-0 cursor-pointer"
                                     >
                                       <Plus className="w-3 h-3" /> Assign
@@ -1255,7 +1341,7 @@ export default function AdminPage() {
                           {/* Card Footer: Delete this lesson */}
                           <div className="pt-1.5 border-t border-zinc-100 flex justify-end">
                             <button
-                              onClick={() => handleDeleteActiveLesson(lesson.id)}
+                              onClick={() => requestDeleteActiveLesson(lesson.id, lesson.title)}
                               className="text-[11px] text-zinc-400 hover:text-red-600 transition flex items-center gap-1 font-medium py-0.5 px-1 rounded hover:bg-red-50"
                               title="Delete this lesson"
                             >
@@ -1341,7 +1427,7 @@ export default function AdminPage() {
                               </h4>
                             </div>
                             <button
-                              onClick={() => handleDeleteMasterLesson(lesson.id)}
+                              onClick={() => requestDeleteMasterLesson(lesson.id, lesson.title)}
                               className="text-red-500 hover:text-red-700 p-1"
                               title="Delete Recurring Session"
                             >
@@ -1363,7 +1449,7 @@ export default function AdminPage() {
 
                                   {regular ? (
                                     <button
-                                      onClick={() => handleRemoveMasterRegular(regular.id)}
+                                      onClick={() => requestRemoveMasterRegular(regular.id, regular.client_name)}
                                       className="text-red-500 hover:text-red-700 p-1"
                                       title="Remove Regular"
                                     >
@@ -1371,7 +1457,7 @@ export default function AdminPage() {
                                     </button>
                                   ) : (
                                     <button
-                                      onClick={() => handleAddMasterRegular(lesson.id, slotNum)}
+                                      onClick={() => openAssignModal('master', lesson.id, slotNum, lesson.title, formatTime12Hr(lesson.start_time), dayName)}
                                       className="text-zinc-700 hover:text-black font-semibold text-xs flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded border border-zinc-200 transition cursor-pointer"
                                     >
                                       <UserPlus className="w-3.5 h-3.5" /> Assign Regular
@@ -2328,6 +2414,134 @@ export default function AdminPage() {
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
                 Add Recurring Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP ASSIGN RIDER MODAL */}
+      {assignModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-zinc-200">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3
+                  className="font-bold text-base text-zinc-900"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  {assignModal.type === 'master' ? 'Assign Regular Rider' : 'Assign Rider to Slot'}
+                </h3>
+                <p className="text-[11px] text-zinc-500 mt-0.5">
+                  {assignModal.subtitle ? `${assignModal.subtitle} • ` : ''}{assignModal.time} • {assignModal.title} (Slot {assignModal.slotIndex})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAssignModal(null);
+                  setAssignRiderName('');
+                  setAssignError(null);
+                }}
+                className="text-zinc-400 hover:text-black p-1 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1">
+                  Rider Name & Last Initial:
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="e.g. Liv H."
+                  value={assignRiderName}
+                  onChange={(e) => {
+                    setAssignRiderName(e.target.value);
+                    setAssignError(null);
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && submitAssignModal()}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+
+              {assignError && (
+                <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2 flex items-start gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{assignError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAssignModal(null);
+                    setAssignRiderName('');
+                    setAssignError(null);
+                  }}
+                  className="px-3.5 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 rounded-lg transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!assignRiderName.trim() || isAssigning}
+                  onClick={submitAssignModal}
+                  className="px-4 py-2 bg-black hover:bg-zinc-800 disabled:opacity-50 text-[#e8b4b8] rounded-lg text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  {isAssigning ? 'Saving...' : assignModal.type === 'master' ? 'Assign Regular' : 'Assign Rider'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IN-APP CONFIRMATION MODAL */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-zinc-200">
+            <div className="flex items-start gap-3">
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${
+                  confirmModal.isDanger
+                    ? 'bg-red-50 text-red-600 border-red-200'
+                    : 'bg-zinc-100 text-zinc-800 border-zinc-300'
+                }`}
+              >
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-zinc-900">{confirmModal.title}</h3>
+                <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
+                  {confirmModal.message}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                className="px-3.5 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 rounded-lg transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isConfirming}
+                onClick={executeConfirmModal}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition shadow-xs cursor-pointer ${
+                  confirmModal.isDanger
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-black hover:bg-zinc-800 text-[#e8b4b8]'
+                }`}
+              >
+                {isConfirming ? 'Processing...' : confirmModal.confirmText}
               </button>
             </div>
           </div>
