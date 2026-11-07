@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock, Plus, Trash2, Calendar, Users, Key, UserPlus, X, Eye, EyeOff, History, Search, ChevronDown, Receipt, Copy, Check, Download, ChevronUp } from 'lucide-react';
+import { Lock, Plus, Trash2, Calendar, Users, Key, UserPlus, X, Eye, EyeOff, History, Search, ChevronDown, Receipt, Copy, Check, Download, ChevronUp, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { getAppEnvironment } from '../../lib/envUtils';
 
 
 
@@ -50,8 +51,17 @@ export default function AdminPage() {
     max_capacity: 4
   });
 
+  const [isOneOffModalOpen, setIsOneOffModalOpen] = useState(false);
+  const [isMasterModalOpen, setIsMasterModalOpen] = useState(false);
+
   const [newCommunityPasscode, setNewCommunityPasscode] = useState('');
   const [showNewCommunityPasscode, setShowNewCommunityPasscode] = useState(false);
+
+  // Environment detection & manual rollover states (Dev/Test only)
+  const [currentEnv, setCurrentEnv] = useState(null); // 'test' | 'dev' | 'prod'
+  const [isRollingOver, setIsRollingOver] = useState(false);
+  const [showRolloverConfirm, setShowRolloverConfirm] = useState(false);
+  const [rolloverMessage, setRolloverMessage] = useState(null);
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const daysList = [
@@ -65,6 +75,7 @@ export default function AdminPage() {
   ];
 
   useEffect(() => {
+    setCurrentEnv(getAppEnvironment());
     const savedAdmin = localStorage.getItem('cbe_admin_code');
     if (savedAdmin) verifyAdminCode(savedAdmin, true);
   }, []);
@@ -163,10 +174,11 @@ export default function AdminPage() {
   async function handleAddMasterLesson() {
     const { error } = await supabase.from('master_lessons').insert([newMasterLesson]);
     if (!error) {
-      fetchMasterPlan();
+      await fetchMasterPlan();
+      setIsMasterModalOpen(false);
       setNewMasterLesson({ day_of_week: 1, start_time: '16:30', title: 'Group Lesson', max_capacity: 4 });
     } else {
-      alert('Error adding master training session');
+      alert('Error adding master training session: ' + (error.message || ''));
     }
   }
 
@@ -532,16 +544,16 @@ export default function AdminPage() {
     const { error } = await supabase.from('active_lessons').insert([{
       active_week_id: selectedActiveWeek.id,
       lesson_date: newOneOffLesson.lesson_date,
-      start_time: newOneOffLesson.start_time,
-      title: newOneOffLesson.title,
-      max_capacity: newOneOffLesson.max_capacity
+      start_time: newOneOffLesson.start_time || '16:30',
+      title: newOneOffLesson.title?.trim() || 'Group Lesson',
+      max_capacity: newOneOffLesson.max_capacity || 4
     }]);
 
     if (!error) {
-      fetchActiveLessons(selectedActiveWeek.id);
-      alert('One-off training session added successfully!');
+      await fetchActiveLessons(selectedActiveWeek.id);
+      setIsOneOffModalOpen(false);
     } else {
-      alert('Error adding one-off session');
+      alert('Error adding one-off session: ' + (error.message || ''));
     }
   }
 
@@ -589,6 +601,40 @@ export default function AdminPage() {
     }
   }
 
+  async function handleExecuteRollover() {
+    setIsRollingOver(true);
+    setRolloverMessage(null);
+
+    try {
+      const { data, error } = await supabase.rpc('rollover_active_weeks');
+
+      if (error) {
+        console.error('Manual rollover RPC error:', error);
+        setRolloverMessage({
+          type: 'error',
+          text: `Rollover failed: ${error.message || 'Database error occurred while running stored procedure.'}`,
+        });
+      } else {
+        // Refresh active weeks and archive weeks
+        await fetchActiveWeeks();
+        await fetchArchivedWeeks(showAllWeeksInArchive);
+        setShowRolloverConfirm(false);
+        setRolloverMessage({
+          type: 'success',
+          text: data?.message || 'Weekly rollover completed successfully! The 4 active weeks have been advanced.',
+        });
+      }
+    } catch (err) {
+      console.error('Rollover error:', err);
+      setRolloverMessage({
+        type: 'error',
+        text: `Rollover error: ${err.message || 'An unexpected error occurred.'}`,
+      });
+    } finally {
+      setIsRollingOver(false);
+    }
+  }
+
   function formatTime12Hr(timeString) {
     if (!timeString) return '';
     const [hoursStr, minutesStr] = timeString.split(':');
@@ -620,6 +666,67 @@ export default function AdminPage() {
       const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
+  }
+
+  function formatLessonDateSafe(dateStr, options) {
+    if (!dateStr || typeof dateStr !== 'string') return '';
+    try {
+      const d = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('en-US', options || { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
+      }
+    } catch {
+      // fallback
+    }
+    return dateStr;
+  }
+
+  const activeWeekDatesList = useMemo(() => {
+    if (!selectedActiveWeek?.week_start_date) return [];
+    const dates = [];
+    const [year, month, day] = selectedActiveWeek.week_start_date.split('-').map(Number);
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(Date.UTC(year, month - 1, day + i));
+      const dateStr = d.toISOString().split('T')[0];
+      const fullDayName = d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+      const monthDayDate = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+      dates.push({ dateStr, fullDayName, fullDay: fullDayName, monthDayDate, dayIndex: i + 1 });
+    }
+    return dates;
+  }, [selectedActiveWeek?.week_start_date]);
+
+  function openAddOneOffModal(targetDateStr) {
+    let dateToUse = typeof targetDateStr === 'string' && targetDateStr ? targetDateStr : '';
+    if (!dateToUse) {
+      const currentDayName = (selectedDay || 'Monday').toString().toLowerCase();
+      const match = (activeWeekDatesList || []).find(d => 
+        (d?.fullDayName || d?.fullDay || '').toLowerCase() === currentDayName
+      );
+      dateToUse = match?.dateStr || activeWeekDatesList?.[0]?.dateStr || selectedActiveWeek?.week_start_date || new Date().toISOString().split('T')[0];
+    }
+    setNewOneOffLesson({
+      lesson_date: dateToUse,
+      start_time: '16:30',
+      title: 'Group Lesson',
+      max_capacity: 4
+    });
+    setIsOneOffModalOpen(true);
+  }
+
+  function openAddMasterModal(targetDayIndex) {
+    let dayIdx = typeof targetDayIndex === 'number' ? targetDayIndex : 0;
+    if (!dayIdx || dayIdx < 1 || dayIdx > 7) {
+      const currentDayName = (selectedDay || 'Monday').toString().toLowerCase();
+      const foundIdx = daysOfWeek.findIndex(d => (d || '').toLowerCase() === currentDayName);
+      dayIdx = foundIdx !== -1 ? foundIdx + 1 : 1;
+    }
+    setNewMasterLesson({
+      day_of_week: dayIdx,
+      start_time: '16:30',
+      title: 'Group Lesson',
+      max_capacity: 4
+    });
+    setIsMasterModalOpen(true);
   }
 
   const activeDaysSet = new Set(
@@ -933,56 +1040,80 @@ export default function AdminPage() {
               })}
             </div>
 
-            <div className="flex justify-between gap-1">
-              {daysList.map((day) => {
-                const hasLessons = activeDaysSet.has(day.fullDay);
-                const isDaySelected = selectedDay === day.fullDay;
+            <div className="flex items-center gap-1.5">
+              <div className="flex-1 flex justify-between gap-1">
+                {daysList.map((day) => {
+                  const hasLessons = activeDaysSet.has(day.fullDay);
+                  const isDaySelected = selectedDay === day.fullDay;
 
-                return (
-                  <button
-                    key={day.label}
-                    disabled={!hasLessons}
-                    onClick={() => scrollToDay(day.fullDay)}
-                    className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
-                      !hasLessons
-                        ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60'
-                        : isDaySelected
-                        ? 'bg-black text-[#e8b4b8] border-black'
-                        : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
-                    }`}
-                  >
-                    {day.label}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={day.label}
+                      onClick={() => scrollToDay(day.fullDay)}
+                      className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
+                        isDaySelected
+                          ? 'bg-black text-[#e8b4b8] border-black'
+                          : hasLessons
+                          ? 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
+                          : 'bg-zinc-50 text-zinc-400 border-zinc-200 hover:bg-zinc-100'
+                      }`}
+                      title={hasLessons ? `${day.fullDay} (has sessions)` : `${day.fullDay} (no sessions scheduled)`}
+                    >
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openAddOneOffModal()}
+                className="flex items-center gap-1 px-2.5 py-1 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-amber-950 font-bold text-xs rounded border border-amber-500 shadow-2xs transition shrink-0 cursor-pointer"
+                title="Add session to schedule"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Add Session</span>
+              </button>
             </div>
           </div>
         )}
 
         {/* MASTER TEMPLATE DAY JUMP BAR */}
         {activeTab === 'master-plan' && (
-          <div className="flex justify-between gap-1 px-1">
-            {daysList.map((day) => {
-              const hasLessons = masterDaysSet.has(day.fullDay);
-              const isDaySelected = selectedDay === day.fullDay;
+          <div className="flex items-center gap-1.5 px-1">
+            <div className="flex-1 flex justify-between gap-1">
+              {daysList.map((day) => {
+                const hasLessons = masterDaysSet.has(day.fullDay);
+                const isDaySelected = selectedDay === day.fullDay;
 
-              return (
-                <button
-                  key={day.label}
-                  disabled={!hasLessons}
-                  onClick={() => scrollToDay(day.fullDay)}
-                  className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
-                    !hasLessons
-                      ? 'bg-zinc-100 text-zinc-300 border-zinc-200 cursor-not-allowed opacity-60'
-                      : isDaySelected
-                      ? 'bg-black text-[#e8b4b8] border-black'
-                      : 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
-                  }`}
-                >
-                  {day.label}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={day.label}
+                    onClick={() => scrollToDay(day.fullDay)}
+                    className={`flex-1 py-1 rounded text-xs font-bold transition text-center shadow-xs border ${
+                      isDaySelected
+                        ? 'bg-black text-[#e8b4b8] border-black'
+                        : hasLessons
+                        ? 'bg-white text-zinc-800 border-zinc-300 hover:bg-zinc-100'
+                        : 'bg-zinc-50 text-zinc-400 border-zinc-200 hover:bg-zinc-100'
+                    }`}
+                    title={hasLessons ? `${day.fullDay} (has recurring sessions)` : `${day.fullDay} (empty)`}
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => openAddMasterModal()}
+              className="flex items-center gap-1 px-2.5 py-1 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-amber-950 font-bold text-xs rounded border border-amber-500 shadow-2xs transition shrink-0 cursor-pointer"
+              title="Add recurring session to template"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Add Recurring</span>
+            </button>
           </div>
         )}
       </div>
@@ -990,63 +1121,10 @@ export default function AdminPage() {
       {/* TAB 1: LESSON MAINTENANCE */}
       {activeTab === 'active-weeks' && (
         <div className="space-y-6 pt-1">
-          {/* Add One-Off Session Form */}
-          <div className="bg-amber-50/60 p-3.5 rounded-lg border border-amber-200 space-y-2">
-            <h3
-              className="font-bold text-xs text-amber-900 flex items-center gap-1.5"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-            >
-              <Plus className="w-3.5 h-3.5 text-amber-700" /> Add One-Off Training Session
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              <input
-                type="date"
-                value={newOneOffLesson.lesson_date}
-                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, lesson_date: e.target.value })}
-                className="border rounded p-1.5 text-xs bg-white"
-              />
-
-              <input
-                type="time"
-                value={newOneOffLesson.start_time}
-                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, start_time: e.target.value })}
-                className="border rounded p-1.5 text-xs bg-white"
-              />
-
-              <input
-                type="text"
-                placeholder="Title (Evaluation, Private)"
-                value={newOneOffLesson.title}
-                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, title: e.target.value })}
-                className="border rounded p-1.5 text-xs bg-white"
-              />
-
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={newOneOffLesson.max_capacity}
-                onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, max_capacity: parseInt(e.target.value) })}
-                className="border rounded p-1.5 text-xs bg-white"
-              />
-
-              <button
-                onClick={handleAddOneOffLesson}
-                className="bg-black text-[#e8b4b8] text-xs font-semibold rounded p-1.5 hover:bg-zinc-800 transition col-span-2 md:col-span-1"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-              >
-                Add Session
-              </button>
-            </div>
-          </div>
-
           {/* Grouped Daily Lessons */}
           <div className="space-y-6">
-            {Object.keys(groupedActiveLessons).map((dateStr) => {
-              const dayLessons = groupedActiveLessons[dateStr];
-              const lessonDateObj = new Date(dateStr + 'T00:00:00');
-              const fullDayName = lessonDateObj.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-              const monthDayDate = lessonDateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+            {activeWeekDatesList.map(({ dateStr, fullDayName, monthDayDate }) => {
+              const dayLessons = groupedActiveLessons[dateStr] || [];
 
               return (
                 <div
@@ -1058,19 +1136,43 @@ export default function AdminPage() {
                     className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
                     style={{ '--header-height': `${headerHeight}px` }}
                   >
-                    <span
-                      className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
-                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
+                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                      >
+                        {fullDayName} — {monthDayDate}
+                      </span>
+                      <span className="text-[10px] text-amber-700 font-medium">
+                        {dayLessons.length} {dayLessons.length === 1 ? 'Session' : 'Sessions'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => openAddOneOffModal(dateStr)}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-black text-[#e8b4b8] hover:bg-zinc-800 active:bg-zinc-900 rounded text-[11px] font-bold shadow-2xs transition shrink-0 cursor-pointer"
+                      title={`Add session to ${fullDayName}`}
                     >
-                      {fullDayName} — {monthDayDate}
-                    </span>
-                    <span className="text-[10px] text-amber-700 font-medium">
-                      {dayLessons.length} {dayLessons.length === 1 ? 'Session' : 'Sessions'}
-                    </span>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Session</span>
+                    </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-1">
-                    {dayLessons.map((lesson) => {
+                  {dayLessons.length === 0 ? (
+                    <div className="border border-dashed border-zinc-300 rounded-lg p-3.5 text-center bg-zinc-50/60 mx-1">
+                      <span className="text-xs text-zinc-500">No sessions scheduled for {fullDayName}.</span>
+                      <button
+                        type="button"
+                        onClick={() => openAddOneOffModal(dateStr)}
+                        className="ml-2 text-xs font-semibold text-zinc-900 hover:underline cursor-pointer"
+                      >
+                        + Add session
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-1">
+                      {dayLessons.map((lesson) => {
                       const bookedMap = {};
                       lesson.bookings?.forEach((b) => { bookedMap[b.slot_index] = b; });
 
@@ -1165,9 +1267,10 @@ export default function AdminPage() {
                       );
                     })}
                   </div>
-                </div>
-              );
-            })}
+                )}
+              </div>
+            );
+          })}
           </div>
         </div>
       )}
@@ -1175,63 +1278,10 @@ export default function AdminPage() {
       {/* TAB 2: MASTER PLAN TEMPLATE */}
       {activeTab === 'master-plan' && (
         <div className="space-y-6 pt-2">
-          {/* Add Recurring Session Form */}
-          <div className="bg-zinc-100 p-4 rounded-lg border space-y-3">
-            <h3
-              className="font-bold text-sm text-zinc-800"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-            >
-              Add Recurring Training Session
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <select
-                value={newMasterLesson.day_of_week}
-                onChange={(e) => setNewMasterLesson({ ...newMasterLesson, day_of_week: parseInt(e.target.value) })}
-                className="border rounded p-2 text-sm bg-white"
-              >
-                {daysOfWeek.map((day, idx) => (
-                  <option key={day} value={idx + 1}>{day}</option>
-                ))}
-              </select>
-
-              <input
-                type="time"
-                value={newMasterLesson.start_time}
-                onChange={(e) => setNewMasterLesson({ ...newMasterLesson, start_time: e.target.value })}
-                className="border rounded p-2 text-sm bg-white"
-              />
-
-              <input
-                type="text"
-                placeholder="Title (Group/Private)"
-                value={newMasterLesson.title}
-                onChange={(e) => setNewMasterLesson({ ...newMasterLesson, title: e.target.value })}
-                className="border rounded p-2 text-sm bg-white"
-              />
-
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={newMasterLesson.max_capacity}
-                onChange={(e) => setNewMasterLesson({ ...newMasterLesson, max_capacity: parseInt(e.target.value) })}
-                className="border rounded p-2 text-sm bg-white"
-              />
-
-              <button
-                onClick={handleAddMasterLesson}
-                className="bg-black text-[#e8b4b8] text-sm font-semibold rounded p-2 hover:bg-zinc-800 transition col-span-2 md:col-span-1"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-              >
-                Add Session
-              </button>
-            </div>
-          </div>
-
           {/* Grouped Master Lessons */}
           <div className="space-y-6">
-            {Object.keys(groupedMasterLessons).map((dayName) => {
-              const dayLessons = groupedMasterLessons[dayName];
+            {daysOfWeek.map((dayName, dayIdx) => {
+              const dayLessons = groupedMasterLessons[dayName] || [];
 
               return (
                 <div key={dayName} id={`master-day-section-${dayName.toLowerCase()}`} className="space-y-2">
@@ -1239,19 +1289,43 @@ export default function AdminPage() {
                     className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
                     style={{ '--header-height': `${headerHeight}px` }}
                   >
-                    <span
-                      className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
-                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
+                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                      >
+                        {dayName}
+                      </span>
+                      <span className="text-[10px] text-amber-700 font-medium">
+                        {dayLessons.length} {dayLessons.length === 1 ? 'Recurring Session' : 'Recurring Sessions'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => openAddMasterModal(dayIdx + 1)}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-black text-[#e8b4b8] hover:bg-zinc-800 active:bg-zinc-900 rounded text-[11px] font-bold shadow-2xs transition shrink-0 cursor-pointer"
+                      title={`Add recurring session to ${dayName}`}
                     >
-                      {dayName}
-                    </span>
-                    <span className="text-[10px] text-amber-700 font-medium">
-                      {dayLessons.length} {dayLessons.length === 1 ? 'Recurring Session' : 'Recurring Sessions'}
-                    </span>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Session</span>
+                    </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
-                    {dayLessons.map((lesson) => {
+                  {dayLessons.length === 0 ? (
+                    <div className="border border-dashed border-zinc-300 rounded-lg p-3.5 text-center bg-zinc-50/60 mx-1">
+                      <span className="text-xs text-zinc-500">No recurring sessions scheduled on {dayName}.</span>
+                      <button
+                        type="button"
+                        onClick={() => openAddMasterModal(dayIdx + 1)}
+                        className="ml-2 text-xs font-semibold text-zinc-900 hover:underline cursor-pointer"
+                      >
+                        + Add session
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
+                      {dayLessons.map((lesson) => {
                       const regularMap = {};
                       lesson.master_regulars?.forEach((r) => { regularMap[r.slot_index] = r; });
 
@@ -1310,7 +1384,8 @@ export default function AdminPage() {
                         </div>
                       );
                     })}
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1784,37 +1859,478 @@ export default function AdminPage() {
 
       {/* TAB 3: SETTINGS */}
       {activeTab === 'settings' && (
-        <div className="bg-white border rounded-lg p-6 max-w-md space-y-4 mt-2 shadow-xs">
-          <h3
-            className="font-bold text-lg text-zinc-900"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Update Community Passcode
-          </h3>
-          <p className="text-xs text-zinc-600">This passcode allows riders/parents to unlock "Edit Mode" and book available slots.</p>
-          <div className="relative">
-            <input
-              type={showNewCommunityPasscode ? 'text' : 'password'}
-              placeholder="New Passcode (e.g., CBE2026)"
-              value={newCommunityPasscode}
-              onChange={(e) => setNewCommunityPasscode(e.target.value)}
-              className="w-full border rounded p-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-black"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewCommunityPasscode(!showNewCommunityPasscode)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800"
+        <div className="space-y-6 max-w-xl mt-2">
+          {/* Card 1: Passcode */}
+          <div className="bg-white border rounded-lg p-6 space-y-4 shadow-xs">
+            <h3
+              className="font-bold text-lg text-zinc-900"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
-              {showNewCommunityPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              Update Community Passcode
+            </h3>
+            <p className="text-xs text-zinc-600">This passcode allows riders/parents to unlock "Edit Mode" and book available slots.</p>
+            <div className="relative">
+              <input
+                type={showNewCommunityPasscode ? 'text' : 'password'}
+                placeholder="New Passcode (e.g., CBE2026)"
+                value={newCommunityPasscode}
+                onChange={(e) => setNewCommunityPasscode(e.target.value)}
+                className="w-full border rounded p-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewCommunityPasscode(!showNewCommunityPasscode)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800"
+              >
+                {showNewCommunityPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <button
+              onClick={handleChangePasscode}
+              className="bg-black text-[#e8b4b8] text-sm px-4 py-2 rounded hover:bg-zinc-800 font-semibold transition"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Update Passcode
             </button>
           </div>
-          <button
-            onClick={handleChangePasscode}
-            className="bg-black text-[#e8b4b8] text-sm px-4 py-2 rounded hover:bg-zinc-800 font-semibold transition"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+
+          {/* Card 2: Test & Dev Environment Tool - ONLY shown in Dev / Test environments */}
+          {(currentEnv === 'test' || currentEnv === 'dev') && (
+            <div className="bg-white border-2 border-amber-300 rounded-lg p-5 sm:p-6 space-y-4 shadow-xs">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  {currentEnv === 'test' ? 'Test Environment Tool' : 'Dev Preview Tool'}
+                </span>
+                <span className="text-[10px] text-zinc-400 font-mono">
+                  Hidden on Live Site
+                </span>
+              </div>
+
+              <div>
+                <h3
+                  className="font-bold text-lg text-zinc-900"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Advance Weekly Rollover
+                </h3>
+                <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
+                  Vercel only triggers the automatic weekly cron job in Production. Use this button to manually roll forward the 4 active weeks here in your {currentEnv === 'test' ? 'test' : 'dev'} database.
+                </p>
+              </div>
+
+              {/* Current Active Weeks Badge List */}
+              <div className="bg-zinc-50 border border-zinc-200 rounded p-3 text-xs space-y-1.5">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide block">
+                  Current 4 Active Weeks in this DB:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {activeWeeks.length > 0 ? (
+                    activeWeeks.map((week) => {
+                      const d = new Date(week.week_start_date + 'T00:00:00');
+                      const label = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+                      return (
+                        <span
+                          key={week.id}
+                          className="px-2 py-0.5 bg-white border border-zinc-300 rounded font-mono text-zinc-800 font-semibold text-[11px]"
+                        >
+                          Wk. {label}
+                        </span>
+                      );
+                    })
+                  ) : (
+                    <span className="text-zinc-400 italic">No active weeks loaded</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Status / Feedback message */}
+              {rolloverMessage && (
+                <div
+                  className={`p-3 rounded text-xs flex items-start gap-2 ${
+                    rolloverMessage.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-900 border border-emerald-300'
+                      : 'bg-red-50 text-red-900 border border-red-300'
+                  }`}
+                >
+                  {rolloverMessage.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  )}
+                  <span className="font-medium">{rolloverMessage.text}</span>
+                </div>
+              )}
+
+              {/* Action Button & Confirmation */}
+              <div>
+                {showRolloverConfirm ? (
+                  <div className="p-4 bg-amber-50 border-2 border-amber-400 rounded-lg space-y-3 shadow-xs">
+                    <div className="flex items-start gap-2 text-xs text-amber-950 font-medium">
+                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-bold text-sm text-zinc-900">Confirm Weekly Rollover?</p>
+                        <p className="text-zinc-600 mt-1 text-xs leading-relaxed">
+                          This will archive the oldest active week ({activeWeeks[0] ? `Wk. ${new Date(activeWeeks[0].week_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', timeZone: 'UTC' })}` : 'earliest week'}), shift active weeks forward, and generate the next week from your Master Template.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleExecuteRollover}
+                        disabled={isRollingOver}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-zinc-800 disabled:opacity-50 text-[#e8b4b8] rounded-md font-bold text-xs shadow-xs transition cursor-pointer"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isRollingOver ? 'animate-spin' : ''}`} />
+                        <span>{isRollingOver ? 'Advancing Weeks...' : 'Yes, Advance Weeks Now'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowRolloverConfirm(false)}
+                        disabled={isRollingOver}
+                        className="px-3.5 py-2 bg-white hover:bg-zinc-100 border border-zinc-300 text-zinc-700 rounded-md text-xs font-semibold shadow-2xs transition cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRolloverMessage(null);
+                        setShowRolloverConfirm(true);
+                      }}
+                      disabled={isRollingOver}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 disabled:opacity-50 text-amber-950 text-xs sm:text-sm px-4 py-2.5 rounded-lg font-bold transition shadow-2xs border border-amber-500 cursor-pointer"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Run Weekly Rollover Now</span>
+                    </button>
+                    <p className="text-[11px] text-zinc-500 mt-2">
+                      Archives the oldest week, shifts existing weeks forward, and populates the new 4th week from your Master Template.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL: ADD ONE-OFF SESSION (Lesson Maintenance) */}
+      {isOneOffModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setIsOneOffModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-zinc-200 overflow-hidden my-auto"
+            onClick={(e) => e.stopPropagation()}
           >
-            Update Passcode
-          </button>
+            {/* Modal Header */}
+            <div className="bg-zinc-900 text-white p-4 flex items-center justify-between">
+              <div>
+                <h3
+                  className="font-bold text-base text-[#e8b4b8]"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Add One-Off Training Session
+                </h3>
+                <p className="text-[11px] text-zinc-400">
+                  {selectedActiveWeek ? `Week of ${formatLessonDateSafe(selectedActiveWeek.week_start_date, { month: 'short', day: 'numeric', timeZone: 'UTC' })}` : ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOneOffModalOpen(false)}
+                className="text-zinc-400 hover:text-white p-1 rounded-md transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 text-xs">
+              {/* Date */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Session Date:
+                </label>
+                <input
+                  type="date"
+                  value={newOneOffLesson.lesson_date}
+                  onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, lesson_date: e.target.value })}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                />
+                {newOneOffLesson.lesson_date && (
+                  <span className="text-[11px] text-zinc-500 font-medium mt-1 block">
+                    {formatLessonDateSafe(newOneOffLesson.lesson_date, { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                  </span>
+                )}
+              </div>
+
+              {/* Time */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Start Time:
+                </label>
+                <input
+                  type="time"
+                  value={newOneOffLesson.start_time}
+                  onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, start_time: e.target.value })}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+
+              {/* Title & Quick Chips */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Session Title:
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Group Lesson, Private Lesson"
+                  value={newOneOffLesson.title}
+                  onChange={(e) => setNewOneOffLesson({ ...newOneOffLesson, title: e.target.value })}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                />
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {['Group Lesson', 'Private Lesson'].map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => {
+                        const cap = chip.includes('Private') ? 1 : 4;
+                        setNewOneOffLesson({ ...newOneOffLesson, title: chip, max_capacity: cap });
+                      }}
+                      className={`px-3 py-1 border rounded-full text-xs font-medium transition cursor-pointer ${
+                        newOneOffLesson.title === chip
+                          ? 'bg-black text-[#e8b4b8] border-black font-semibold'
+                          : 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800'
+                      }`}
+                    >
+                      + {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Capacity */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Max Capacity (Rider Slots):
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="9"
+                    value={newOneOffLesson.max_capacity}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (isNaN(val)) setNewOneOffLesson({ ...newOneOffLesson, max_capacity: '' });
+                      else setNewOneOffLesson({ ...newOneOffLesson, max_capacity: Math.min(9, Math.max(1, val)) });
+                    }}
+                    className="w-14 text-center border border-zinc-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5, 6].map((cap) => (
+                      <button
+                        key={cap}
+                        type="button"
+                        onClick={() => setNewOneOffLesson({ ...newOneOffLesson, max_capacity: cap })}
+                        className={`w-8 h-8 rounded border text-xs font-semibold flex items-center justify-center transition cursor-pointer ${
+                          Number(newOneOffLesson.max_capacity) === cap
+                            ? 'bg-black text-[#e8b4b8] border-black font-bold'
+                            : 'bg-zinc-50 border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+                        }`}
+                      >
+                        {cap}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-zinc-50 px-5 py-3.5 border-t border-zinc-200 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsOneOffModalOpen(false)}
+                className="px-4 py-2 border border-zinc-300 rounded-lg text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddOneOffLesson}
+                className="px-5 py-2 bg-black text-[#e8b4b8] rounded-lg text-xs font-bold hover:bg-zinc-800 shadow-xs transition cursor-pointer"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                Add Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD RECURRING SESSION (Master Template) */}
+      {isMasterModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setIsMasterModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-zinc-200 overflow-hidden my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-zinc-900 text-white p-4 flex items-center justify-between">
+              <div>
+                <h3
+                  className="font-bold text-base text-[#e8b4b8]"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Add Recurring Training Session
+                </h3>
+                <p className="text-[11px] text-zinc-400">
+                  Master Template • Populates on weekly rollovers
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMasterModalOpen(false)}
+                className="text-zinc-400 hover:text-white p-1 rounded-md transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 text-xs">
+              {/* Day of Week */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Day of Week:
+                </label>
+                <select
+                  value={newMasterLesson.day_of_week}
+                  onChange={(e) => setNewMasterLesson({ ...newMasterLesson, day_of_week: parseInt(e.target.value, 10) })}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  {daysOfWeek.map((day, idx) => (
+                    <option key={day} value={idx + 1}>{day}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Time */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Start Time:
+                </label>
+                <input
+                  type="time"
+                  value={newMasterLesson.start_time}
+                  onChange={(e) => setNewMasterLesson({ ...newMasterLesson, start_time: e.target.value })}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+
+              {/* Title & Quick Chips */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Session Title:
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Group Lesson, Private Lesson"
+                  value={newMasterLesson.title}
+                  onChange={(e) => setNewMasterLesson({ ...newMasterLesson, title: e.target.value })}
+                  className="w-full border border-zinc-300 rounded-lg p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                />
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {['Group Lesson', 'Private Lesson'].map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => {
+                        const cap = chip.includes('Private') ? 1 : 4;
+                        setNewMasterLesson({ ...newMasterLesson, title: chip, max_capacity: cap });
+                      }}
+                      className={`px-3 py-1 border rounded-full text-xs font-medium transition cursor-pointer ${
+                        newMasterLesson.title === chip
+                          ? 'bg-black text-[#e8b4b8] border-black font-semibold'
+                          : 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800'
+                      }`}
+                    >
+                      + {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Capacity */}
+              <div>
+                <label className="font-bold text-zinc-700 block mb-1">
+                  Max Capacity (Rider Slots):
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="9"
+                    value={newMasterLesson.max_capacity}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (isNaN(val)) setNewMasterLesson({ ...newMasterLesson, max_capacity: '' });
+                      else setNewMasterLesson({ ...newMasterLesson, max_capacity: Math.min(9, Math.max(1, val)) });
+                    }}
+                    className="w-14 text-center border border-zinc-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5, 6].map((cap) => (
+                      <button
+                        key={cap}
+                        type="button"
+                        onClick={() => setNewMasterLesson({ ...newMasterLesson, max_capacity: cap })}
+                        className={`w-8 h-8 rounded border text-xs font-semibold flex items-center justify-center transition cursor-pointer ${
+                          Number(newMasterLesson.max_capacity) === cap
+                            ? 'bg-black text-[#e8b4b8] border-black font-bold'
+                            : 'bg-zinc-50 border-zinc-300 text-zinc-700 hover:bg-zinc-100'
+                        }`}
+                      >
+                        {cap}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-zinc-50 px-5 py-3.5 border-t border-zinc-200 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsMasterModalOpen(false)}
+                className="px-4 py-2 border border-zinc-300 rounded-lg text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddMasterLesson}
+                className="px-5 py-2 bg-black text-[#e8b4b8] rounded-lg text-xs font-bold hover:bg-zinc-800 shadow-xs transition cursor-pointer"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                Add Recurring Session
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

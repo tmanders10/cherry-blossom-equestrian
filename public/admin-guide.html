@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cherry Blossom Equestrian - Admin Portal User Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.65;
+      color: #27272a;
+      max-width: 820px;
+      margin: 40px auto;
+      padding: 0 24px;
+      background-color: #ffffff;
+    }
+    
+    .cbe-header {
+      border-bottom: 3px solid #e8b4b8;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      color: #000000;
+      font-size: 28pt;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-family: 'Inter', sans-serif;
+      color: #71717a;
+      font-size: 11pt;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0 0 8px 0;
+    }
+
+    .doc-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      color: #18181b;
+      font-size: 18pt;
+      font-weight: 600;
+      margin: 6px 0 0 0;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      color: #000000;
+      font-size: 16pt;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #e8b4b8;
+    }
+
+    h3 {
+      font-family: 'Inter', sans-serif;
+      font-size: 12pt;
+      font-weight: 700;
+      color: #18181b;
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    p, li {
+      font-size: 10.5pt;
+      color: #3f3f46;
+    }
+
+    ul, ol {
+      margin-top: 6px;
+      margin-bottom: 16px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    strong {
+      color: #18181b;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10pt;
+      background-color: #fef3c7;
+      color: #78350f;
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid #fde68a;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 9.5pt;
+    }
+    .badge-green { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .badge-amber { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .badge-gray { background: #f4f4f5; color: #3f3f46; border: 1px solid #e4e4e7; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 10.5pt;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    th, td {
+      border: 1px solid #e4e4e7;
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #000000;
+      color: #e8b4b8;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 600;
+      font-size: 11pt;
+      letter-spacing: 0.5px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    blockquote {
+      background: #fff1f2;
+      border-left: 4px solid #e8b4b8;
+      margin: 14px 0;
+      padding: 12px 18px;
+      font-size: 10.5pt;
+      color: #4c0519;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .copy-tip {
+      background: #fdf2f4;
+      border: 1.5px solid #e8b4b8;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 28px;
+      font-size: 11pt;
+      color: #831843;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="copy-tip">
+    🌸 <strong>How to copy to your Google Doc:</strong> Press <strong>Ctrl+A</strong> (or <strong>Cmd+A</strong> on Mac) to select all, then <strong>Ctrl+C</strong> to copy. In your Google Doc, press <strong>Ctrl+V</strong>. Google Docs will preserve the <em>Playfair Display</em> serif fonts, blush pink accents, bold text, lists, and formatted tables!
+  </div>
+
+  <div class="cbe-header">
+    <h1>Cherry Blossom Equestrian</h1>
+    <p class="subtitle">User Guides & System Documentation</p>
+    <p class="doc-title">Admin Portal User Guide</p>
+  </div>
+
+  <p>Welcome to your Admin Portal! This guide covers everything you need to manage weekly lesson schedules, assign recurring riders, track lesson attendance, review historical archives, generate monthly billing summaries, and control system access.</p>
+
+  <h2>1. Understanding the Environments & Top Banners</h2>
+  <p>To ensure you always know whether you are working in test mode or live mode, the website includes clear top banners:</p>
+  <ul>
+    <li><strong>Production Live Site (<code>cherryblossomequestrian.com</code>):</strong><br>
+    <strong>No banner.</strong> The live site is completely clean with zero clutter for clients and parents.</li>
+    <li><strong>Test & QA Environment (<code>dev.cherryblossomequestrian.com</code>):</strong><br>
+    Displays a vibrant <strong>Amber/Yellow Warning Banner</strong> across the top: <em>⚠️ TEST ENVIRONMENT — QA Only</em>. It includes a direct <strong>[ Live Site ↗ ]</strong> button so you can jump to the real live website with one tap.</li>
+    <li><strong>Development Preview (Google AI Studio):</strong><br>
+    Displays a <strong>Slate Blue Banner</strong> across the top: <em>🛠️ DEV PREVIEW — Sandbox</em>.</li>
+  </ul>
+
+  <h2>2. Accessing the Admin Portal</h2>
+  <ul>
+    <li><strong>Navigation:</strong> Open the website menu and select <strong>Admin Portal</strong> (or tap the View Switcher dropdown on mobile).</li>
+    <li><strong>Authentication:</strong> Enter your Admin Passcode (<code>cbe2026crd</code>) and click <strong>Authenticate Admin</strong>.</li>
+    <li><strong>Session Persistence:</strong> Your phone or computer will remember your login on that device, so you do not have to re-enter the passcode on every visit.</li>
+    <li><strong>Exiting:</strong> To exit Admin Mode at any time, click or tap the <strong>Exit</strong> button in the top black header bar.</li>
+  </ul>
+
+  <h2>3. Lesson Maintenance Tab (Managing Active Weeks)</h2>
+  <p>Use this tab for day-to-day schedule updates across the rolling 4-week window.</p>
+  <ul>
+    <li><strong>Selecting Weeks:</strong> Tap any week button across the top (e.g., <em>Wk. 10/26, Wk. 11/02</em>) to view or edit that specific week.</li>
+    <li><strong>Smart Auto-Scroll:</strong> When you open Lesson Maintenance, the screen automatically positions you to <strong>Today's</strong> schedule. While editing earlier days (like updating Monday attendance on a Saturday), the screen stays locked right where you are working without jumping.</li>
+    <li><strong>Quick Day Jump:</strong> Tap the day buttons (<em>M, Tu, W, Th, Fr, Sa, Su</em>) to jump directly to any day. As you scroll, the active day button highlights automatically.</li>
+  </ul>
+
+  <h3>Tracking Lesson Attendance</h3>
+  <p>Every booked rider has an interactive attendance status dropdown:</p>
+  <ul>
+    <li><span class="badge badge-green">✓ Attended</span> <strong>Default:</strong> Default for all booked students. Counts as a completed, billable lesson.</li>
+    <li><span class="badge badge-amber">✕ Late Cancel</span> <strong>Billed:</strong> Cancellation with short notice or no-show per barn policy. Counts as a billable session on the monthly invoice.</li>
+    <li><span class="badge badge-gray">○ Excused</span> <strong>No Charge:</strong> Weather cancellation, advance notice, or sickness. Does not count toward billing.</li>
+  </ul>
+  <p><em>Tip: Because every booking defaults to Attended automatically, you never have to mark students on normal weeks—only change the status when an exception occurs!</em></p>
+
+  <h3>Assigning or Removing Riders</h3>
+  <ul>
+    <li><strong>To assign a rider:</strong> Click <strong>+ Assign</strong> on an empty slot, enter the rider's Name & Last Initial (e.g., <em>Sofie H.</em>), and click OK.</li>
+    <li><strong>To remove a rider:</strong> Click the red trash icon next to the rider's slot and confirm.</li>
+  </ul>
+
+  <h3>Adding Administrative Notes</h3>
+  <ul>
+    <li>In any lesson header, type a brief note in the note box (e.g., <em>Sick, Show, Brownwood, Private Approved</em>).</li>
+    <li>Tap outside the text box or press enter to save. Notes immediately display on the public schedule.</li>
+  </ul>
+
+  <h3>Adding a One-Off Training Session</h3>
+  <ol>
+    <li>Under <strong>Add One-Off Training Session</strong>, choose the Date, Time, Title (e.g., <em>Group Lesson, Private, Evaluation</em>), and Max Capacity.</li>
+    <li>Click <strong>Add Session</strong>. It immediately appears in that week's schedule without altering your default Master Template.</li>
+  </ol>
+
+  <h3>Deleting a Session</h3>
+  <p>At the very bottom right of any lesson card, click <strong>🗑 Delete this lesson</strong> and confirm to remove that session for the week. (This is safely separated from the note box to prevent accidental deletions).</p>
+
+  <h2>4. Past Weeks Archive Tab (Historical Records)</h2>
+  <p>Use this tab to look up previous weeks, verify past attendance, or answer parent billing questions.</p>
+  <ul>
+    <li><strong>Selecting a Past Week:</strong> Use the <strong>Week</strong> dropdown at the top to select any completed week from the past.</li>
+    <li><strong>Instant Rider Search:</strong> Type a rider's name in the search bar. All sessions they participated in will highlight with a gold background, and non-relevant sessions will collapse.</li>
+    <li><strong>Attendance Adjustments:</strong> You can view and update attendance statuses retroactively if a correction is needed.</li>
+    <li><strong>Summary Metrics:</strong> The header shows the week's total <strong>Billable Sessions</strong>, <strong>Excused Sessions</strong>, and total sessions.</li>
+  </ul>
+
+  <h2>5. Monthly Invoicing Summary Tab (End-of-Month Billing)</h2>
+  <p>Use this tab at the end of the month to generate parent invoices and check barn totals in seconds.</p>
+  <ul>
+    <li><strong>Billing Month Dropdown:</strong> Select the current month or any of the past 12 months.</li>
+    <li><strong>Historical Accuracy:</strong> The system automatically excludes future dates and only tallies lessons that have actually taken place (today or earlier).</li>
+    <li><strong>Barn Overview Ribbon:</strong> Top metric cards show barn-wide totals:
+      <ul>
+        <li><strong>Total Billable Lessons:</strong> Sum of Attended + Late Cancel.</li>
+        <li><strong>Attended:</strong> Present riders.</li>
+        <li><strong>Late Cancel:</strong> Billed per barn policy.</li>
+        <li><strong>Excused:</strong> Non-billable / No charge.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>Rider-by-Rider Breakdown</h3>
+  <ul>
+    <li><strong>Alphabetical List:</strong> Every student who rode during the month is listed in alphabetical order with their total billable lesson count (e.g., <em>4 Lessons</em>).</li>
+    <li><strong>Tap to Expand:</strong> Tap any rider's card to reveal the complete date-by-date breakdown with dates, times, lesson types, and attendance statuses.</li>
+    <li><strong>📋 Copy Message (For Parents):</strong> Inside each rider card, tap <strong>Copy Message</strong> to instantly copy a formatted message ready to text or email to the parent:
+      <blockquote>
+        Cherry Blossom Equestrian — October 2026<br>
+        Rider: Sofie H.<br>
+        Total Billable Lessons: 4 (4 Attended, 0 Late Cancel)<br>
+        Lesson Details:<br>
+        • Mon, 10/5 @ 4:30p (Group Lesson): Attended<br>
+        • Mon, 10/12 @ 4:30p (Group Lesson): Attended<br>
+        • Mon, 10/19 @ 4:30p (Group Lesson): Attended<br>
+        • Mon, 10/26 @ 4:30p (Group Lesson): Attended
+      </blockquote>
+    </li>
+    <li><strong>📥 Export CSV:</strong> Downloads a full spreadsheet with all students, counts, and dates for Excel or QuickBooks.</li>
+    <li><strong>📋 Copy Summary:</strong> Copies the full barn billing roster to your clipboard in one tap.</li>
+  </ul>
+
+  <h2>6. Master Template Tab (Recurring Weekly Schedule)</h2>
+  <p>This tab controls your permanent default weekly schedule. When a new week rolls around, it automatically inherits all sessions and recurring riders set here.</p>
+  <ul>
+    <li><strong>Adding a Recurring Session:</strong> Select the Day of the Week, Start Time, Session Title, and Max Capacity. Click <strong>Add Session</strong>.</li>
+    <li><strong>Assigning Regular Riders:</strong> Click <strong>Assign Regular</strong> on an unassigned slot to set a permanent weekly rider. When new active weeks generate, these regular riders fill their default slots automatically.</li>
+    <li><strong>Deleting a Recurring Session:</strong> Click the red trash icon in the session header to remove a recurring time slot from future master templates.</li>
+  </ul>
+
+  <h2>7. Settings Tab (Community Passcode Management)</h2>
+  <ul>
+    <li><strong>Change the Client Passcode:</strong> Enter a new code and click <strong>Update Passcode</strong>.</li>
+    <li>Share the new code with riders and parents so they can continue unlocking edit mode to book available open slots.</li>
+  </ul>
+
+  <h2>Quick Reference: Key Credentials & URLs</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Admin Portal Passcode</strong></td>
+        <td><code>cbe2026crd</code></td>
+      </tr>
+      <tr>
+        <td><strong>Default Client Passcode</strong></td>
+        <td><code>cbe2026</code></td>
+      </tr>
+      <tr>
+        <td><strong>Live Production Website</strong></td>
+        <td>https://cherryblossomequestrian.com</td>
+      </tr>
+      <tr>
+        <td><strong>Test / QA Website</strong></td>
+        <td>https://dev.cherryblossomequestrian.com</td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>

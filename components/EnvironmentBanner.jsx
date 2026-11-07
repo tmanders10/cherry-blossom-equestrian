@@ -2,29 +2,14 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Terminal, ExternalLink } from 'lucide-react';
 
+import { getAppEnvironment } from '../lib/envUtils';
+
 export default function EnvironmentBanner() {
   const [env, setEnv] = useState(null); // 'test' | 'dev' | null
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const host = window.location.hostname.toLowerCase();
-
-    // 1. Test / QA Environment
-    if (host.includes('dev.cherryblossomequestrian.com')) {
-      setEnv('test');
-    }
-    // 2. Dev Environment (Google AI Studio or Local)
-    else if (
-      host.includes('run.app') ||
-      host.includes('localhost') ||
-      host.includes('127.0.0.1')
-    ) {
-      setEnv('dev');
-    }
-    // 3. Production (cherryblossomequestrian.com or other custom domains)
-    else {
-      setEnv(null);
-    }
+    const detected = getAppEnvironment();
+    setEnv(detected === 'prod' ? null : detected);
   }, []);
 
   // In production, render nothing (pristine live site)
