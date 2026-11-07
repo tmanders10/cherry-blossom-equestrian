@@ -1,14 +1,15 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Info, Calendar, Lock, Menu, X } from 'lucide-react';
+import { Info, Award, Calendar, Lock, Menu, X } from 'lucide-react';
 import EnvironmentBanner from './EnvironmentBanner';
 
 export default function SidebarNav({ isOpen, setIsOpen }) {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Head Trainer Bio', href: '/', icon: Info },
+    { name: 'About Us', href: '/', icon: Info },
+    { name: 'Head Trainer', href: '/trainer', icon: Award },
     { name: 'Schedule & Booking', href: '/schedule', icon: Calendar },
     { name: 'Admin Portal', href: '/admin', icon: Lock },
   ];

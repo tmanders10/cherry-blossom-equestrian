@@ -775,7 +775,7 @@ export default function AdminPage() {
             className="flex items-center gap-2 text-zinc-900 font-bold text-xl"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
-            <Lock className="w-5 h-5 text-amber-600" />
+            <Lock className="w-5 h-5 text-zinc-900" />
             Admin Portal Access
           </div>
           <p className="text-xs text-zinc-600">Enter passcode to manage Master Schedule and Active Weeks.</p>
@@ -1068,7 +1068,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => openAddOneOffModal()}
-                className="flex items-center gap-1 px-2.5 py-1 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-amber-950 font-bold text-xs rounded border border-amber-500 shadow-2xs transition shrink-0 cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 bg-black hover:bg-zinc-800 active:bg-zinc-900 text-[#e8b4b8] font-bold text-xs rounded border border-black shadow-2xs transition shrink-0 cursor-pointer"
                 title="Add session to schedule"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -1108,7 +1108,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => openAddMasterModal()}
-              className="flex items-center gap-1 px-2.5 py-1 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-amber-950 font-bold text-xs rounded border border-amber-500 shadow-2xs transition shrink-0 cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 bg-black hover:bg-zinc-800 active:bg-zinc-900 text-[#e8b4b8] font-bold text-xs rounded border border-black shadow-2xs transition shrink-0 cursor-pointer"
               title="Add recurring session to template"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -1133,17 +1133,17 @@ export default function AdminPage() {
                   className="space-y-2"
                 >
                   <div
-                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
+                    className="sticky z-20 bg-white/95 backdrop-blur-xs border-y border-zinc-200 border-l-4 border-l-[#e8b4b8] px-3.5 py-1.5 shadow-2xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
                     style={{ '--header-height': `${headerHeight}px` }}
                   >
                     <div className="flex items-baseline gap-2">
                       <span
-                        className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
+                        className="text-xs font-bold text-zinc-900 uppercase tracking-wider"
                         style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                       >
                         {fullDayName} — {monthDayDate}
                       </span>
-                      <span className="text-[10px] text-amber-700 font-medium">
+                      <span className="text-[10px] font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">
                         {dayLessons.length} {dayLessons.length === 1 ? 'Session' : 'Sessions'}
                       </span>
                     </div>
@@ -1195,7 +1195,7 @@ export default function AdminPage() {
                                 placeholder="Note (Sick, Show)"
                                 defaultValue={lesson.admin_note || ''}
                                 onBlur={(e) => handleUpdateAdminNote(lesson.id, e.target.value)}
-                                className="text-[11px] border rounded px-1.5 py-0.5 bg-amber-50 w-28"
+                                className="text-[11px] border border-zinc-200 rounded px-1.5 py-0.5 bg-zinc-50 focus:bg-white focus:border-zinc-400 w-28 transition"
                               />
                             </div>
                           </div>
@@ -1223,7 +1223,7 @@ export default function AdminPage() {
                                           (booking.attendance_status || 'attended') === 'attended'
                                             ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                                             : booking.attendance_status === 'late_cancel'
-                                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                            ? 'bg-rose-50 text-rose-800 border-rose-300'
                                             : 'bg-zinc-100 text-zinc-700 border-zinc-300'
                                         }`}
                                       >
@@ -1242,7 +1242,7 @@ export default function AdminPage() {
                                   ) : (
                                     <button
                                       onClick={() => handleAdminAddBooking(lesson.id, slotNum)}
-                                      className="text-amber-700 hover:text-amber-900 text-[11px] flex items-center gap-0.5 font-medium shrink-0"
+                                      className="text-zinc-700 hover:text-black font-semibold text-[11px] flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded border border-zinc-200 transition shrink-0 cursor-pointer"
                                     >
                                       <Plus className="w-3 h-3" /> Assign
                                     </button>
@@ -1286,17 +1286,17 @@ export default function AdminPage() {
               return (
                 <div key={dayName} id={`master-day-section-${dayName.toLowerCase()}`} className="space-y-2">
                   <div
-                    className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
+                    className="sticky z-20 bg-white/95 backdrop-blur-xs border-y border-zinc-200 border-l-4 border-l-[#e8b4b8] px-3.5 py-1.5 shadow-2xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
                     style={{ '--header-height': `${headerHeight}px` }}
                   >
                     <div className="flex items-baseline gap-2">
                       <span
-                        className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
+                        className="text-xs font-bold text-zinc-900 uppercase tracking-wider"
                         style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                       >
                         {dayName}
                       </span>
-                      <span className="text-[10px] text-amber-700 font-medium">
+                      <span className="text-[10px] font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">
                         {dayLessons.length} {dayLessons.length === 1 ? 'Recurring Session' : 'Recurring Sessions'}
                       </span>
                     </div>
@@ -1372,7 +1372,7 @@ export default function AdminPage() {
                                   ) : (
                                     <button
                                       onClick={() => handleAddMasterRegular(lesson.id, slotNum)}
-                                      className="text-amber-700 hover:text-amber-900 text-xs flex items-center gap-1 font-medium"
+                                      className="text-zinc-700 hover:text-black font-semibold text-xs flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded border border-zinc-200 transition cursor-pointer"
                                     >
                                       <UserPlus className="w-3.5 h-3.5" /> Assign Regular
                                     </button>
@@ -1429,7 +1429,7 @@ export default function AdminPage() {
             </div>
           ) : archivedWeeks.length === 0 ? (
             <div className="bg-white border border-zinc-200 rounded-lg p-6 sm:p-8 text-center space-y-3 shadow-xs">
-              <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 rounded-full bg-zinc-900 text-[#e8b4b8] flex items-center justify-center mx-auto shadow-2xs">
                 <History className="w-6 h-6" />
               </div>
               <h3
@@ -1530,7 +1530,7 @@ export default function AdminPage() {
                               </div>
 
                               {lesson.admin_note && (
-                                <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200 font-medium">
+                                <span className="text-[10px] bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-200 font-medium">
                                   {lesson.admin_note}
                                 </span>
                               )}
@@ -1543,13 +1543,13 @@ export default function AdminPage() {
                                     key={booking.id || bIdx}
                                     className={`flex justify-between items-center text-xs p-1.5 rounded border ${
                                       isSearching
-                                        ? 'bg-amber-100 border-amber-300 font-semibold shadow-xs'
+                                        ? 'bg-[#fcf5f6] border-[#e8b4b8] font-semibold shadow-xs'
                                         : 'bg-zinc-50 border-zinc-200'
                                     }`}
                                   >
                                     <div className="flex items-center gap-2">
                                       <span className="text-zinc-400 font-mono text-[11px]">{bIdx + 1}.</span>
-                                      <span className={`text-xs ${isSearching ? 'text-amber-950 font-bold' : 'text-zinc-900 font-medium'}`}>
+                                      <span className={`text-xs ${isSearching ? 'text-zinc-950 font-bold' : 'text-zinc-900 font-medium'}`}>
                                         {booking.client_name}
                                       </span>
                                     </div>
@@ -1561,7 +1561,7 @@ export default function AdminPage() {
                                         (booking.attendance_status || 'attended') === 'attended'
                                           ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                                           : booking.attendance_status === 'late_cancel'
-                                          ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                          ? 'bg-rose-50 text-rose-800 border-rose-300'
                                           : 'bg-zinc-100 text-zinc-700 border-zinc-300'
                                       }`}
                                     >
@@ -1684,14 +1684,14 @@ export default function AdminPage() {
               <span className="text-[10px] text-zinc-500 block">present</span>
             </div>
 
-            <div className="bg-amber-50/70 border border-amber-200/80 rounded-lg p-2 text-center">
-              <span className="text-[10px] uppercase font-bold text-amber-800 tracking-wider block">
+            <div className="bg-rose-50/70 border border-rose-200/80 rounded-lg p-2 text-center">
+              <span className="text-[10px] uppercase font-bold text-rose-800 tracking-wider block">
                 Late Cancel
               </span>
-              <span className="text-lg font-bold text-amber-950">
+              <span className="text-lg font-bold text-rose-950">
                 {invoiceTotals.late_cancel}
               </span>
-              <span className="text-[10px] text-amber-700 block font-medium">billed</span>
+              <span className="text-[10px] text-rose-700 block font-medium">billed</span>
             </div>
 
             <div className="bg-zinc-100 border border-zinc-200 rounded-lg p-2 text-center">
@@ -1810,7 +1810,7 @@ export default function AdminPage() {
                                     session.attendance_status === 'attended'
                                       ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                                       : session.attendance_status === 'late_cancel'
-                                      ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                      ? 'bg-rose-50 text-rose-800 border-rose-300'
                                       : 'bg-zinc-100 text-zinc-700 border-zinc-300'
                                   }`}
                                 >
@@ -1896,10 +1896,10 @@ export default function AdminPage() {
 
           {/* Card 2: Test & Dev Environment Tool - ONLY shown in Dev / Test environments */}
           {(currentEnv === 'test' || currentEnv === 'dev') && (
-            <div className="bg-white border-2 border-amber-300 rounded-lg p-5 sm:p-6 space-y-4 shadow-xs">
+            <div className="bg-white border border-zinc-200 rounded-lg p-5 sm:p-6 space-y-4 shadow-xs">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-300 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
                   {currentEnv === 'test' ? 'Test Environment Tool' : 'Dev Preview Tool'}
                 </span>
                 <span className="text-[10px] text-zinc-400 font-mono">
@@ -1965,9 +1965,9 @@ export default function AdminPage() {
               {/* Action Button & Confirmation */}
               <div>
                 {showRolloverConfirm ? (
-                  <div className="p-4 bg-amber-50 border-2 border-amber-400 rounded-lg space-y-3 shadow-xs">
-                    <div className="flex items-start gap-2 text-xs text-amber-950 font-medium">
-                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                  <div className="p-4 bg-zinc-50 border border-zinc-300 rounded-lg space-y-3 shadow-xs">
+                    <div className="flex items-start gap-2 text-xs text-zinc-900 font-medium">
+                      <AlertCircle className="w-4 h-4 text-zinc-700 shrink-0 mt-0.5" />
                       <div>
                         <p className="font-bold text-sm text-zinc-900">Confirm Weekly Rollover?</p>
                         <p className="text-zinc-600 mt-1 text-xs leading-relaxed">
@@ -2004,7 +2004,7 @@ export default function AdminPage() {
                         setShowRolloverConfirm(true);
                       }}
                       disabled={isRollingOver}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-500 active:bg-amber-600 disabled:opacity-50 text-amber-950 text-xs sm:text-sm px-4 py-2.5 rounded-lg font-bold transition shadow-2xs border border-amber-500 cursor-pointer"
+                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-black hover:bg-zinc-800 active:bg-zinc-900 disabled:opacity-50 text-[#e8b4b8] text-xs sm:text-sm px-4 py-2.5 rounded-lg font-bold transition shadow-2xs border border-black cursor-pointer"
                     >
                       <RefreshCw className="w-4 h-4" />
                       <span>Run Weekly Rollover Now</span>

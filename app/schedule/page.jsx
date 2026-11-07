@@ -198,7 +198,7 @@ export default function SchedulePage() {
             className="flex items-center gap-2 text-zinc-900 font-bold text-xl"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
-            <Lock className="w-5 h-5 text-amber-600" />
+            <Lock className="w-5 h-5 text-zinc-900" />
             Schedule & Booking Access
           </div>
           <p className="text-xs text-zinc-600">Enter community passcode to view training schedules and book slots.</p>
@@ -331,18 +331,18 @@ export default function SchedulePage() {
               id={`day-section-${fullDayName.toLowerCase()}`}
               className="space-y-2"
             >
-              {/* Sticky Day Banner */}
+              {/* Sticky Day Banner (Clean Light with Pink Accent) */}
               <div
-                className="sticky z-20 bg-amber-50/95 backdrop-blur-xs border-y border-amber-200/80 px-3 py-1.5 shadow-xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
+                className="sticky z-20 bg-white/95 backdrop-blur-xs border-y border-zinc-200 border-l-4 border-l-[#e8b4b8] px-3.5 py-1.5 shadow-2xs flex justify-between items-center rounded-sm top-[calc(52px+var(--header-height,0px))] md:top-[var(--header-height,0px)]"
                 style={{ '--header-height': `${headerHeight}px` }}
               >
                 <span
-                  className="text-xs font-extrabold text-amber-900 uppercase tracking-wider"
+                  className="text-xs font-bold text-zinc-900 uppercase tracking-wider"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
                   {fullDayName} — {monthDayDate}
                 </span>
-                <span className="text-[10px] text-amber-700 font-medium">
+                <span className="text-[10px] font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">
                   {dayLessons.length} {dayLessons.length === 1 ? 'Session' : 'Sessions'}
                 </span>
               </div>
@@ -364,7 +364,7 @@ export default function SchedulePage() {
                         </h3>
 
                         {lesson.admin_note && (
-                          <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-200 font-medium">
+                          <span className="text-[10px] bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-200 font-medium">
                             {lesson.admin_note}
                           </span>
                         )}
@@ -392,7 +392,7 @@ export default function SchedulePage() {
                               ) : (
                                 <button
                                   onClick={() => handleBookSlot(lesson.id, slotNum)}
-                                  className="text-amber-700 hover:text-amber-900 text-[11px] font-semibold"
+                                  className="text-xs font-bold text-zinc-900 hover:text-black bg-zinc-100 hover:bg-black hover:text-[#e8b4b8] px-2 py-0.5 rounded transition border border-zinc-200 cursor-pointer"
                                 >
                                   + Book
                                 </button>
