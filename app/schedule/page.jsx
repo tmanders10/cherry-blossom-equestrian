@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, Plus } from 'lucide-react';
 
 export default function SchedulePage() {
   const [isScheduleUnlocked, setIsScheduleUnlocked] = useState(false);
@@ -392,9 +392,9 @@ export default function SchedulePage() {
                               ) : (
                                 <button
                                   onClick={() => handleBookSlot(lesson.id, slotNum)}
-                                  className="text-xs font-bold text-zinc-900 hover:text-black bg-zinc-100 hover:bg-black hover:text-[#e8b4b8] px-2 py-0.5 rounded transition border border-zinc-200 cursor-pointer"
+                                  className="text-zinc-700 hover:text-black font-semibold text-[11px] flex items-center gap-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded border border-zinc-200 transition cursor-pointer"
                                 >
-                                  + Book
+                                  <Plus className="w-3 h-3" /> Book
                                 </button>
                               )}
                             </div>
