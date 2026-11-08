@@ -1,10 +1,14 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Info, Award, Calendar, Lock, Menu, X, Phone, Mail } from 'lucide-react';
 import EnvironmentBanner from './EnvironmentBanner';
 
-export default function SidebarNav({ isOpen, setIsOpen }) {
+export default function SidebarNav({ isOpen: propIsOpen, setIsOpen: propSetIsOpen }) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = propIsOpen !== undefined ? propIsOpen : internalOpen;
+  const setIsOpen = propSetIsOpen || setInternalOpen;
   const pathname = usePathname();
 
   const navItems = [
@@ -127,11 +131,11 @@ export default function SidebarNav({ isOpen, setIsOpen }) {
           </a>
           <a
             href="mailto:trainer@cherryblossomequestrian.com"
-            className="flex items-center gap-2 text-[11px] text-zinc-300 hover:text-[#e8b4b8] transition px-1 group truncate"
+            className="flex items-center gap-2 text-xs text-zinc-300 hover:text-[#e8b4b8] transition px-1 group"
             title="trainer@cherryblossomequestrian.com"
           >
             <Mail className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#e8b4b8] shrink-0" />
-            <span className="font-medium truncate">trainer@cherryblossomequestrian.com</span>
+            <span className="font-medium">Email Us</span>
           </a>
         </div>
 
