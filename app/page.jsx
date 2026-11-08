@@ -1,143 +1,20 @@
 'use client';
-import { useState } from 'react';
 import Link from 'next/link';
 import { Award, ChevronRight, MapPin, Heart, Shield, Sparkles, Phone, Mail } from 'lucide-react';
 
 export default function AboutUsPage() {
-  const [logoOption, setLogoOption] = useState('refined_dark'); // 'refined_dark' | 'refined_light' | 'refined_black' | 'dark' | 'enhanced' | 'light'
-
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
       {/* Hero Section */}
       <header className="text-center space-y-4 pt-2">
         <div className="space-y-3 inline-block">
-          {/* Logo Display */}
+          {/* Main Logo */}
           <div className="relative inline-block">
-            {logoOption === 'refined_dark' ? (
-              <img
-                src="/cbe_dark_refined.jpg"
-                alt="Cherry Blossom Equestrian Refined 2D Dark Logo"
-                className="w-52 md:w-60 mx-auto h-auto rounded-2xl shadow-lg border border-zinc-900 bg-black transition-all duration-300"
-              />
-            ) : logoOption === 'refined_light' ? (
-              <img
-                src="/cbe_light_refined.jpg"
-                alt="Cherry Blossom Equestrian Refined 2D Light Logo with Pink Text"
-                className="w-52 md:w-60 mx-auto h-auto rounded-2xl shadow-lg border border-zinc-200 bg-white transition-all duration-300"
-              />
-            ) : logoOption === 'refined_black' ? (
-              <img
-                src="/cbe_light_black.jpg"
-                alt="Cherry Blossom Equestrian Refined 2D Light Logo with Black Text"
-                className="w-52 md:w-60 mx-auto h-auto rounded-2xl shadow-lg border border-zinc-200 bg-white transition-all duration-300"
-              />
-            ) : logoOption === 'enhanced' ? (
-              <img
-                src="/cbe_dark_logo.jpg"
-                alt="Cherry Blossom Equestrian 3D Dimensional Dark Logo"
-                className="w-52 md:w-60 mx-auto h-auto rounded-2xl shadow-xl border border-zinc-900 bg-black transition-all duration-300"
-              />
-            ) : logoOption === 'dark' ? (
-              <img
-                src="/dark%20logo.png"
-                alt="Cherry Blossom Equestrian Original Dark Logo"
-                className="w-48 md:w-56 mx-auto h-auto rounded-2xl shadow-lg border border-zinc-900 bg-black transition-all duration-300"
-              />
-            ) : (
-              <img
-                src="/logo.png"
-                alt="Cherry Blossom Equestrian Original White Logo"
-                className="w-44 md:w-52 mx-auto h-auto rounded-2xl border border-zinc-200 bg-white p-2 transition-all duration-300"
-              />
-            )}
-          </div>
-
-          {/* Quick Comparison Selector */}
-          <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-2.5 max-w-xl mx-auto space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">
-                Compare Logo Variations
-              </span>
-              <span className="text-[10px] text-[#e8b4b8] font-semibold">
-                {logoOption === 'refined_dark' ? '★ Selected Site Logo' : 'Preview Mode'}
-              </span>
-            </div>
-
-            {/* Dark options */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0.5">
-              <span className="text-[10px] text-zinc-400 font-medium mr-1">Dark:</span>
-              <button
-                type="button"
-                onClick={() => setLogoOption('refined_dark')}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition cursor-pointer border ${
-                  logoOption === 'refined_dark'
-                    ? 'bg-black text-[#e8b4b8] border-black shadow-xs font-bold'
-                    : 'bg-white text-zinc-700 hover:text-black border-zinc-200'
-                }`}
-              >
-                ★ Refined 2D Dark (Selected)
-              </button>
-              <button
-                type="button"
-                onClick={() => setLogoOption('dark')}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition cursor-pointer border ${
-                  logoOption === 'dark'
-                    ? 'bg-black text-[#e8b4b8] border-black shadow-xs font-bold'
-                    : 'bg-white text-zinc-700 hover:text-black border-zinc-200'
-                }`}
-              >
-                Original Dark
-              </button>
-              <button
-                type="button"
-                onClick={() => setLogoOption('enhanced')}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition cursor-pointer border ${
-                  logoOption === 'enhanced'
-                    ? 'bg-black text-[#e8b4b8] border-black shadow-xs font-bold'
-                    : 'bg-white text-zinc-700 hover:text-black border-zinc-200'
-                }`}
-              >
-                3D Metallic
-              </button>
-            </div>
-
-            {/* Light / White options */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1 border-t border-zinc-200/60">
-              <span className="text-[10px] text-zinc-400 font-medium mr-1">Light:</span>
-              <button
-                type="button"
-                onClick={() => setLogoOption('refined_light')}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition cursor-pointer border ${
-                  logoOption === 'refined_light'
-                    ? 'bg-zinc-900 text-[#e8b4b8] border-zinc-900 shadow-xs font-bold'
-                    : 'bg-white text-zinc-700 hover:text-black border-zinc-200'
-                }`}
-              >
-                ★ Refined Light (Pink Text)
-              </button>
-              <button
-                type="button"
-                onClick={() => setLogoOption('refined_black')}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition cursor-pointer border ${
-                  logoOption === 'refined_black'
-                    ? 'bg-zinc-900 text-[#e8b4b8] border-zinc-900 shadow-xs font-bold'
-                    : 'bg-white text-zinc-700 hover:text-black border-zinc-200'
-                }`}
-              >
-                ★ Refined Light (Black Text)
-              </button>
-              <button
-                type="button"
-                onClick={() => setLogoOption('light')}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition cursor-pointer border ${
-                  logoOption === 'light'
-                    ? 'bg-zinc-900 text-[#e8b4b8] border-zinc-900 shadow-xs font-bold'
-                    : 'bg-white text-zinc-700 hover:text-black border-zinc-200'
-                }`}
-              >
-                Original White
-              </button>
-            </div>
+            <img
+              src="/cbe_dark_refined.jpg"
+              alt="Cherry Blossom Equestrian Logo"
+              className="w-52 md:w-60 mx-auto h-auto rounded-2xl shadow-lg border border-zinc-900 bg-black"
+            />
           </div>
         </div>
 

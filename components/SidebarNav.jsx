@@ -40,9 +40,9 @@ export default function SidebarNav({ isOpen: propIsOpen, setIsOpen: propSetIsOpe
           </span>
         </div>
           <img
-            src="/logo.png"
+            src="/cbe_light_refined.jpg"
             alt="CBE Logo"
-            className="w-7 h-auto"
+            className="w-8 h-8 rounded-lg object-contain bg-white border border-zinc-700"
           />
         </div>
       </header>
@@ -72,9 +72,9 @@ export default function SidebarNav({ isOpen: propIsOpen, setIsOpen: propSetIsOpe
               <X className="w-5 h-5" />
             </button>
             <img
-              src="/logo.png"
+              src="/cbe_light_refined.jpg"
               alt="Cherry Blossom Equestrian Logo"
-              className="w-28 h-auto mb-3"
+              className="w-28 h-auto mb-3 rounded-2xl border border-zinc-800 shadow-md bg-white"
             />
             <h2
               className="text-sm font-bold tracking-widest text-[#e8b4b8] uppercase"

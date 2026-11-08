@@ -18,7 +18,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Favicon / Tab Icon Links (Text-Free Horseshoe Emblem) */}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-emblem-32.png" />
@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/favicon-emblem-192.png" />
       </head>
-      <body className="min-h-screen bg-white text-zinc-900 antialiased flex flex-col md:flex-row">
+      <body className="min-h-screen bg-white text-zinc-900 antialiased flex flex-col md:flex-row" suppressHydrationWarning>
         {/* Navigation Sidebar & Mobile Header */}
         <SidebarNav />
 
