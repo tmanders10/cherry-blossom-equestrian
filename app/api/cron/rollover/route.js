@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabaseClient';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   // Optional: Verify Vercel Cron Secret to secure the endpoint
   const authHeader = request.headers.get('authorization');

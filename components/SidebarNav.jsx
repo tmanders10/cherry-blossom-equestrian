@@ -1,13 +1,19 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Info, Calendar, Lock, Menu, X } from 'lucide-react';
+import { Info, Award, Calendar, Lock, Menu, X, Phone, Mail } from 'lucide-react';
+import EnvironmentBanner from './EnvironmentBanner';
 
-export default function SidebarNav({ isOpen, setIsOpen }) {
+export default function SidebarNav({ isOpen: propIsOpen, setIsOpen: propSetIsOpen }) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = propIsOpen !== undefined ? propIsOpen : internalOpen;
+  const setIsOpen = propSetIsOpen || setInternalOpen;
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Head Trainer Bio', href: '/', icon: Info },
+    { name: 'About Us', href: '/', icon: Info },
+    { name: 'Head Trainer', href: '/trainer', icon: Award },
     { name: 'Schedule & Booking', href: '/schedule', icon: Calendar },
     { name: 'Admin Portal', href: '/admin', icon: Lock },
   ];
@@ -15,7 +21,9 @@ export default function SidebarNav({ isOpen, setIsOpen }) {
   return (
     <>
       {/* Mobile / Small Viewport Top Sticky Bar */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-black text-white px-4 py-2.5 flex items-center justify-between border-b border-zinc-800 shadow-md h-[52px]">
+      <header className="md:hidden sticky top-0 left-0 right-0 z-40 bg-black text-white flex flex-col border-b border-zinc-800 shadow-md">
+        <EnvironmentBanner />
+        <div className="px-4 py-2.5 flex items-center justify-between h-[52px]">
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -31,11 +39,12 @@ export default function SidebarNav({ isOpen, setIsOpen }) {
             Cherry Blossom Equestrian
           </span>
         </div>
-        <img
-          src="/logo.png"
-          alt="CBE Logo"
-          className="w-7 h-auto"
-        />
+          <img
+            src="/logo.png"
+            alt="CBE Logo"
+            className="w-7 h-auto"
+          />
+        </div>
       </header>
 
       {/* Backdrop overlay for mobile when drawer is open */}
@@ -108,8 +117,30 @@ export default function SidebarNav({ isOpen, setIsOpen }) {
           </nav>
         </div>
 
+        {/* Contact Block in Sidebar */}
+        <div className="border-t border-zinc-800 pt-4 pb-3 space-y-2">
+          <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest px-1">
+            Contact Charity
+          </div>
+          <a
+            href="tel:7702492205"
+            className="flex items-center gap-2 text-xs text-zinc-300 hover:text-[#e8b4b8] transition px-1 group"
+          >
+            <Phone className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#e8b4b8] shrink-0" />
+            <span className="font-medium">(770) 249-2205</span>
+          </a>
+          <a
+            href="mailto:trainer@cherryblossomequestrian.com"
+            className="flex items-center gap-2 text-xs text-zinc-300 hover:text-[#e8b4b8] transition px-1 group"
+            title="trainer@cherryblossomequestrian.com"
+          >
+            <Mail className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#e8b4b8] shrink-0" />
+            <span className="font-medium">Email Us</span>
+          </a>
+        </div>
+
         {/* Footer */}
-        <div className="text-[10px] text-zinc-500 text-center border-t border-zinc-800 pt-4 uppercase tracking-widest">
+        <div className="text-[10px] text-zinc-500 text-center border-t border-zinc-800 pt-3 uppercase tracking-widest">
           &copy; Cherry Blossom Equestrian
         </div>
       </aside>
